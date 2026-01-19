@@ -37,7 +37,7 @@ See [World Clock Documentation](docs/widgets/info/worldclock.md) for full config
 ```yaml
 services:
   homepage:
-    image: ghcr.io/$GITHUB_REPOSITORY:latest
+    image: ghcr.io/karlspace/dashboard:latest
     # ... rest of your config
 ```
 
