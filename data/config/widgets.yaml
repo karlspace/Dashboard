@@ -66,15 +66,17 @@
 #         #hour12: false
 
 - worldclock:
-    text_size: sm
-    format: 24h
-    locale: de
+    text_size: sm           # 4xl, 3xl, 2xl, xl, lg, md, sm, xs
+    format: 24h             # 24h or 12h
+    locale: de              # Override locale for date/time formatting
     layout: grid            # horizontal, vertical, or grid
     columns: 2              # columns for grid layout (1-8)
-    show_date: true
-    show_seconds: false
+    show_date: true         # Show date (first clock's timezone)
+    show_seconds: false     # Include seconds in time display
     date_position: left     # left, right, above, below
-    date_format:
+    label_bold: true        # Display label in bold
+    time_bold: false        # Display time in bold
+    date_format:            # Intl.DateTimeFormat options for date
       weekday: short
       day: numeric
       month: short
