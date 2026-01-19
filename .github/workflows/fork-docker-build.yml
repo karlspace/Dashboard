@@ -5,6 +5,9 @@ on:
     branches:
       - workspace/**
       # - feature/**
+    paths-ignore:
+      - ".github/**"
+      - "**/*.md"      
   workflow_dispatch:
 
 env:
