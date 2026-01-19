@@ -12,6 +12,8 @@ This fork adds the following features:
 
 A new information widget that displays multiple time zones with customizable labels and optional flag emojis.
 
+![World Clock Example](docs/images/worldclock-example.png)
+
 ```yaml
 - worldclock:
     format: 24h
