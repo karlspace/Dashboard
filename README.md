@@ -1,3 +1,48 @@
+# Homepage Fork
+
+> **This is a personal fork of [gethomepage/homepage](https://github.com/gethomepage/homepage).**
+>
+> This fork is **not affiliated** with the original project maintainers. For the official version, please visit the [upstream repository](https://github.com/gethomepage/homepage).
+
+## Fork Extensions
+
+This fork adds the following features:
+
+### World Clock Widget
+
+A new information widget that displays multiple time zones with customizable labels and optional flag emojis.
+
+```yaml
+- worldclock:
+    format: 24h
+    show_date: true
+    layout: grid
+    columns: 3
+    clocks:
+      - timezone: Europe/Berlin
+        label: DE
+        flag: de
+      - timezone: America/New_York
+        label: NYC
+        flag: us
+      - timezone: Asia/Tokyo
+        label: TYO
+        flag: jp
+```
+
+See [World Clock Documentation](docs/widgets/info/worldclock.md) for full configuration options.
+
+## Using This Fork
+
+```yaml
+services:
+  homepage:
+    image: ghcr.io/$GITHUB_REPOSITORY:latest
+    # ... rest of your config
+```
+
+---
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/banner_light@2x.png">
@@ -11,25 +56,6 @@
 
 <p align="center">
   <img src="images/1.png?v=2" />
-</p>
-
-<p align="center">
-  <a href="https://github.com/gethomepage/homepage/actions/workflows/docker-publish.yml"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/gethomepage/homepage/docker-publish.yml"></a>
-  &nbsp;
-  <a href="https://crowdin.com/project/gethomepage" target="_blank"><img src="https://badges.crowdin.net/gethomepage/localized.svg"></a>
-  &nbsp;
-  <a href="https://discord.gg/k4ruYNrudu"><img alt="Discord" src="https://img.shields.io/discord/1019316731635834932"></a>
-  &nbsp;
-  <a href="https://gethomepage.dev/" title="Docs"><img title="Docs" src="https://github.com/gethomepage/homepage/actions/workflows/docs-publish.yml/badge.svg"/></a>
-  &nbsp;
-  <a href="https://paypal.me/phelpsben" title="Donate"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/benphelps"></a>
-</p>
-
-<p align="center">
-  <a href="https://www.digitalocean.com/?refcode=df14bcb7c016&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" alt="DigitalOcean Referral Badge" /></a>
-</p>
-<p align="center">
-<em>Homepage builds are kindly powered by DigitalOcean.</em>
 </p>
 
 # Features
