@@ -44,6 +44,8 @@ function checkIconExists(iconPath) {
 export async function getServerSideProps({ res }) {
   checkAndCopyConfig("settings.yaml");
   const settings = getSettings();
+  
+  logger.info(`Settings file location: ${require('path').join(process.env.HOMEPAGE_CONFIG_DIR || require('path').join(process.cwd(), "config"), "settings.yaml")}`);
 
   // Check if PWA configuration exists
   const pwaConfig = settings.pwa || null;
@@ -278,9 +280,15 @@ export async function getServerSideProps({ res }) {
   // Build manifest with fallback values
   const shortNameValue = getConfigValue('shortName', 'shortName', null);
   logger.info(`shortName from config: "${shortNameValue}", pwaConfig.shortName: "${pwaConfig.shortName}"`);
+  
+  // Use explicit null/undefined check instead of falsy check to preserve empty strings if intentional
+  const shortName = (shortNameValue !== null && shortNameValue !== undefined) 
+    ? shortNameValue 
+    : getConfigValue('title', 'title', 'Homepage');
+  
   const manifest = {
     name: getConfigValue('title', 'title', 'Homepage'),
-    short_name: shortNameValue || getConfigValue('title', 'title', 'Homepage'),
+    short_name: shortName,
     description: getConfigValue('description', 'description', 'A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.'),
     lang: language,
     start_url: getPwaOnlyValue('startUrl', '/'),  // PWA-specific, use default
