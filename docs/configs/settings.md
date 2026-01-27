@@ -96,12 +96,26 @@ Or you may pass the path to a local image relative to the `/app/public` director
 
 Homepage supports Progressive Web App (PWA) installation with comprehensive manifest customization. The PWA manifest controls how your homepage appears when installed as an app on mobile devices, tablets, and desktops.
 
-**Configuration Structure:** All PWA-specific settings should be nested under a `pwa:` key in your `settings.yaml` file. If the `pwa:` key is present, Homepage will generate a custom PWA manifest. If it's not present, a default minimal manifest will be used.
+**Configuration Structure:** All PWA-specific settings should be nested under a `pwa:` key in your `settings.yaml` file. 
 
-**Fallback Behavior:** When a setting is missing from the `pwa:` section, Homepage will:
-1. First check if the same setting exists at the root level of `settings.yaml`
-2. If not found, use the documented default value
-3. If no default exists, the field may be omitted from the manifest
+**Behavior:**
+- **With `pwa:` key present**: Homepage generates a custom PWA manifest with all specified settings
+- **Without `pwa:` key**: Homepage generates a default minimal manifest using root-level settings (title, description, language, display, orientation, theme colors) when available
+
+**Fallback Behavior (when `pwa:` key is present):**
+
+Settings are divided into two categories:
+
+1. **General Settings** (title, description, language, themeColor, backgroundColor, shortName):
+   - First checks `pwa.field`
+   - If not found, falls back to root-level `settings.field`
+   - If still not found, uses default value
+
+2. **PWA-Specific Settings** (display, orientation, scope, startUrl, iconPath, categories, Apple settings):
+   - Only checks `pwa.field`
+   - If not found and mandatory, uses default value
+   - If not found and optional, field is omitted from manifest
+   - **Does NOT fall back to root-level settings**
 
 ### Basic PWA Settings
 
@@ -159,7 +173,7 @@ pwa:
 - **minimal-ui**: Similar to standalone with minimal browser controls
 - **browser**: Opens in a regular browser tab
 
-**Fallback:** If `pwa.display` is not set, falls back to root-level `display`, then defaults to "standalone".
+**Default:** If not specified in `pwa:` section, defaults to "standalone". Does NOT fall back to root-level settings.
 
 #### Orientation
 
@@ -172,7 +186,7 @@ pwa:
 
 Additional options: `portrait-primary`, `portrait-secondary`, `landscape-primary`, `landscape-secondary`
 
-**Fallback:** If `pwa.orientation` is not set, falls back to root-level `orientation`, then defaults to "any".
+**Default:** If not specified in `pwa:` section, defaults to "any". Does NOT fall back to root-level settings.
 
 #### Scope and Start URL
 
@@ -184,7 +198,7 @@ pwa:
   startUrl: /      # Starting URL when app launches, defaults to "/"
 ```
 
-**Fallback:** Both settings fall back to root-level values, then default to "/".
+**Default:** Both default to "/" if not specified. These are PWA-specific settings and do NOT fall back to root-level settings.
 
 ### Theme Customization
 
@@ -216,7 +230,7 @@ pwa:
 
 Common categories: `business`, `education`, `entertainment`, `finance`, `fitness`, `games`, `lifestyle`, `medical`, `music`, `news`, `productivity`, `shopping`, `social`, `sports`, `travel`, `utilities`
 
-**Fallback:** If `pwa.categories` is not set, falls back to root-level `categories`.
+**Optional:** If not specified in `pwa:` section, this field is omitted from the manifest. Does NOT fall back to root-level settings.
 
 ### Icon Configuration
 
@@ -229,7 +243,7 @@ pwa:
   iconPath: /images/icons
 ```
 
-**Default Behavior:** If `pwa.iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). All icons are validated for existence before being included in the manifest.
+**Default Behavior:** If `pwa.iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). All icons are validated for existence before being included in the manifest. Does NOT fall back to root-level settings.
 
 When `iconPath` is set, Homepage will look for the following icon files:
 
@@ -290,7 +304,7 @@ pwa:
 - `black`: Black background with white text
 - `black-translucent`: Translucent black, content shows behind
 
-**Fallback:** All Apple-specific settings fall back to root-level values if not specified in `pwa:` section.
+**Optional:** All Apple-specific settings are optional. If not specified in `pwa:` section, they are omitted from the manifest. Does NOT fall back to root-level settings.
 
 ### Complete Example
 
