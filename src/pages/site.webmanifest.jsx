@@ -255,7 +255,8 @@ export async function getServerSideProps({ res }) {
   if (rawThemeColor && !validateHexColor(rawThemeColor)) {
     logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default "${themes[color][theme]}"`);
   } else if (rawThemeColor) {
-    logger.debug(`Using themeColor: ${rawThemeColor} from ${pwaConfig.themeColor ? 'pwa config' : 'root settings'}`);
+    const source = (pwaConfig.themeColor !== undefined && pwaConfig.themeColor !== null) ? 'pwa config' : 'root settings';
+    logger.debug(`Using themeColor: ${rawThemeColor} from ${source}`);
   } else {
     logger.debug(`Using default themeColor: ${themes[color][theme]} from theme`);
   }
@@ -265,7 +266,8 @@ export async function getServerSideProps({ res }) {
   if (rawBackgroundColor && !validateHexColor(rawBackgroundColor)) {
     logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default "${themes[color][theme]}"`);
   } else if (rawBackgroundColor) {
-    logger.debug(`Using backgroundColor: ${rawBackgroundColor} from ${pwaConfig.backgroundColor ? 'pwa config' : 'root settings'}`);
+    const source = (pwaConfig.backgroundColor !== undefined && pwaConfig.backgroundColor !== null) ? 'pwa config' : 'root settings';
+    logger.debug(`Using backgroundColor: ${rawBackgroundColor} from ${source}`);
   } else {
     logger.debug(`Using default backgroundColor: ${themes[color][theme]} from theme`);
   }
