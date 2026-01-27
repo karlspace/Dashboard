@@ -96,34 +96,52 @@ Or you may pass the path to a local image relative to the `/app/public` director
 
 Homepage supports Progressive Web App (PWA) installation with comprehensive manifest customization. The PWA manifest controls how your homepage appears when installed as an app on mobile devices, tablets, and desktops.
 
+**Configuration Structure:** All PWA-specific settings should be nested under a `pwa:` key in your `settings.yaml` file. If the `pwa:` key is present, Homepage will generate a custom PWA manifest. If it's not present, a default minimal manifest will be used.
+
+**Fallback Behavior:** When a setting is missing from the `pwa:` section, Homepage will:
+1. First check if the same setting exists at the root level of `settings.yaml`
+2. If not found, use the documented default value
+3. If no default exists, the field may be omitted from the manifest
+
 ### Basic PWA Settings
+
+All settings in this section should be placed under the `pwa:` key.
 
 #### Title and Short Name
 
 The `title` is used as both the app name and short name by default. You can customize the short name separately for home screen display:
 
 ```yaml
-title: "Dashboard | BAUER GROUP"
-shortName: "Dashboard"  # Optional, defaults to title
+pwa:
+  title: "Dashboard | BAUER GROUP"
+  shortName: "Dashboard"  # Optional, defaults to pwa.title or root title
 ```
+
+**Fallback:** If `pwa.title` is not set, falls back to root-level `title`, then defaults to "Homepage".
 
 #### Description
 
 Customize the app description shown in app stores and installation prompts:
 
 ```yaml
-description: "Dashboard of Company Services at BAUER GROUP"
+pwa:
+  description: "Dashboard of Company Services at BAUER GROUP"
 ```
+
+**Fallback:** If `pwa.description` is not set, falls back to root-level `description`, then to a default description.
 
 #### Language
 
 Set the primary language for your PWA manifest:
 
 ```yaml
-language: en  # ISO 639-1 language code (e.g., en, de, fr, es)
+pwa:
+  language: en  # ISO 639-1 language code (e.g., en, de, fr, es)
 ```
 
 Supports language codes with regions (e.g., `en-US`, `de-DE`, `fr-FR`).
+
+**Fallback:** If `pwa.language` is not set, falls back to root-level `language`, then defaults to "en".
 
 ### PWA Display Settings
 
@@ -132,7 +150,8 @@ Supports language codes with regions (e.g., `en-US`, `de-DE`, `fr-FR`).
 Controls how the PWA appears when launched:
 
 ```yaml
-display: standalone  # Options: standalone, fullscreen, minimal-ui, browser
+pwa:
+  display: standalone  # Options: standalone, fullscreen, minimal-ui, browser
 ```
 
 - **standalone** (default): Looks like a native app, hides browser UI
@@ -140,24 +159,32 @@ display: standalone  # Options: standalone, fullscreen, minimal-ui, browser
 - **minimal-ui**: Similar to standalone with minimal browser controls
 - **browser**: Opens in a regular browser tab
 
+**Fallback:** If `pwa.display` is not set, falls back to root-level `display`, then defaults to "standalone".
+
 #### Orientation
 
 Set the preferred screen orientation:
 
 ```yaml
-orientation: any  # Options: any, natural, landscape, portrait
+pwa:
+  orientation: any  # Options: any, natural, landscape, portrait
 ```
 
 Additional options: `portrait-primary`, `portrait-secondary`, `landscape-primary`, `landscape-secondary`
+
+**Fallback:** If `pwa.orientation` is not set, falls back to root-level `orientation`, then defaults to "any".
 
 #### Scope and Start URL
 
 Define the PWA's navigation scope and starting point:
 
 ```yaml
-scope: /         # Navigation scope, defaults to "/"
-startUrl: /      # Starting URL when app launches, defaults to "/"
+pwa:
+  scope: /         # Navigation scope, defaults to "/"
+  startUrl: /      # Starting URL when app launches, defaults to "/"
 ```
+
+**Fallback:** Both settings fall back to root-level values, then default to "/".
 
 ### Theme Customization
 
@@ -166,11 +193,12 @@ startUrl: /      # Starting URL when app launches, defaults to "/"
 Override theme colors with custom hex values:
 
 ```yaml
-themeColor: "#FF8500"        # Hex color for browser UI
-backgroundColor: "#18181B"    # Hex color for splash screen background
+pwa:
+  themeColor: "#FF8500"        # Hex color for browser UI
+  backgroundColor: "#18181B"    # Hex color for splash screen background
 ```
 
-If not specified, these will use the selected theme's default colors (based on `color` and `theme` settings).
+If not specified in the `pwa:` section, these will check root-level settings, then use the selected theme's default colors (based on `color` and `theme` settings).
 
 **Color format:** Must be valid hex colors (`#RRGGBB` or `#RGB`). Invalid colors will fall back to theme defaults with a warning.
 
@@ -179,13 +207,16 @@ If not specified, these will use the selected theme's default colors (based on `
 Specify app categories for app stores:
 
 ```yaml
-categories:
-  - business
-  - productivity
-  - utilities
+pwa:
+  categories:
+    - business
+    - productivity
+    - utilities
 ```
 
 Common categories: `business`, `education`, `entertainment`, `finance`, `fitness`, `games`, `lifestyle`, `medical`, `music`, `news`, `productivity`, `shopping`, `social`, `sports`, `travel`, `utilities`
+
+**Fallback:** If `pwa.categories` is not set, falls back to root-level `categories`.
 
 ### Icon Configuration
 
@@ -194,10 +225,11 @@ Common categories: `business`, `education`, `entertainment`, `finance`, `fitness
 Configure a directory containing your custom PWA icons:
 
 ```yaml
-iconPath: /images/icons
+pwa:
+  iconPath: /images/icons
 ```
 
-**Default Behavior:** If `iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). The system always provides fallback icons to ensure PWA functionality.
+**Default Behavior:** If `pwa.iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). All icons are validated for existence before being included in the manifest.
 
 When `iconPath` is set, Homepage will look for the following icon files:
 
@@ -247,9 +279,10 @@ When `iconPath` is set, Homepage will look for the following icon files:
 Configure iOS/macOS specific PWA behavior:
 
 ```yaml
-appleMobileWebAppCapable: yes           # Enable iOS web app mode
-appleMobileWebAppStatusBarStyle: black-translucent  # Status bar style
-appleMobileWebAppTitle: "Dashboard"     # iOS home screen name
+pwa:
+  appleMobileWebAppCapable: yes           # Enable iOS web app mode
+  appleMobileWebAppStatusBarStyle: black-translucent  # Status bar style
+  appleMobileWebAppTitle: "Dashboard"     # iOS home screen name
 ```
 
 **Status Bar Styles:**
@@ -257,41 +290,46 @@ appleMobileWebAppTitle: "Dashboard"     # iOS home screen name
 - `black`: Black background with white text
 - `black-translucent`: Translucent black, content shows behind
 
+**Fallback:** All Apple-specific settings fall back to root-level values if not specified in `pwa:` section.
+
 ### Complete Example
 
 Here's a comprehensive PWA configuration example:
 
 ```yaml
-# Basic App Info
-title: "Dashboard | BAUER GROUP"
-shortName: "Dashboard"
-description: "Dashboard of Company Services at BAUER GROUP"
-language: en
+# PWA Configuration
+pwa:
+  # Basic App Info
+  title: "Dashboard | BAUER GROUP"
+  shortName: "Dashboard"
+  description: "Dashboard of Company Services at BAUER GROUP"
+  language: en
 
-# PWA Display
-display: standalone
-orientation: any
-scope: /
-startUrl: /
+  # Display & Navigation
+  display: standalone
+  orientation: any
+  scope: /
+  startUrl: /
 
-# Theme Colors
-themeColor: "#FF8500"
-backgroundColor: "#18181B"
+  # Theme & Colors
+  themeColor: "#FF8500"        # BAUER GROUP Orange
+  backgroundColor: "#18181B"   # Dark background (matches dark theme)
 
-# Categories
-categories:
-  - business
-  - productivity
+  # App Categories
+  categories:
+    - business
+    - productivity
+    - utilities
 
-# Custom Icons
-iconPath: /images/icons
+  # Icons
+  iconPath: /images/icons
 
-# Apple Settings
-appleMobileWebAppCapable: yes
-appleMobileWebAppStatusBarStyle: black-translucent
-appleMobileWebAppTitle: "Dashboard"
+  # Apple / iOS specific settings
+  appleMobileWebAppCapable: yes
+  appleMobileWebAppStatusBarStyle: black-translucent
+  appleMobileWebAppTitle: "Dashboard"
 
-# Standard Settings (non-PWA, but affect theme defaults)
+# Standard Settings (used as fallbacks and for general theme)
 theme: dark
 color: slate
 ```
