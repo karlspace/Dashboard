@@ -10,6 +10,8 @@ This fork adds the following features:
 
 ### World Clock Widget
 
+Branch: feature/worldclock
+
 A new information widget that displays multiple time zones with customizable labels and optional flag emojis.
 
 ![World Clock Example](docs/images/worldclock-example.png)
@@ -33,6 +35,14 @@ A new information widget that displays multiple time zones with customizable lab
 ```
 
 See [World Clock Documentation](docs/widgets/info/worldclock.md) for full configuration options.
+
+### Extended PWA 
+
+Branch: feature/pwa-configuration
+
+Homepage supports Progressive Web App (PWA) installation with comprehensive manifest customization. The PWA manifest controls how your homepage appears when installed as an app on mobile devices, tablets, and desktops.
+
+Full [PWA Documentation](docs/configs/settings.md#pwa-manifest-configuration)
 
 ## Using This Fork
 
