@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { existsSync } from "fs";
 import { join } from "path";
 
@@ -178,7 +179,24 @@ export async function getServerSideProps({ res }) {
   }
 
   res.setHeader("Content-Type", "application/manifest+json");
-  res.write(JSON.stringify(manifest));
+  // Set cache headers to ensure manifest updates when config changes
+  // Use no-cache to allow conditional requests with ETag
+  res.setHeader("Cache-Control", "no-cache, must-revalidate");
+  
+  // Generate ETag from manifest content for proper cache validation
+  const manifestJson = JSON.stringify(manifest);
+  const etag = createHash("md5").update(manifestJson).digest("hex");
+  res.setHeader("ETag", `"${etag}"`);
+  
+  // Check if client has the same version
+  const clientEtag = res.req.headers["if-none-match"];
+  if (clientEtag === `"${etag}"`) {
+    res.statusCode = 304;
+    res.end();
+    return { props: {} };
+  }
+  
+  res.write(manifestJson);
   res.end();
 
   return {
