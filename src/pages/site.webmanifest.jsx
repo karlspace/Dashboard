@@ -117,7 +117,8 @@ export async function getServerSideProps({ res }) {
 
   // PWA config exists, build custom manifest
   logger.info("PWA configuration found, building custom manifest");
-  logger.debug(`PWA config keys: ${Object.keys(pwaConfig).join(', ')}`);
+  logger.info(`PWA config keys: ${Object.keys(pwaConfig).join(', ')}`);
+  logger.info(`PWA config: ${JSON.stringify(pwaConfig, null, 2)}`);
   
   const color = settings.color || "slate";
   const theme = settings.theme || "dark";
@@ -251,31 +252,35 @@ export async function getServerSideProps({ res }) {
 
   // Validate colors - can fall back to root settings
   const rawThemeColor = getConfigValue('themeColor', 'themeColor', null);
+  logger.info(`rawThemeColor value: "${rawThemeColor}", pwaConfig.themeColor: "${pwaConfig.themeColor}"`);
   const themeColor = validateHexColor(rawThemeColor) || themes[color][theme];
   if (rawThemeColor && !validateHexColor(rawThemeColor)) {
     logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default "${themes[color][theme]}"`);
   } else if (rawThemeColor) {
     const source = (pwaConfig.themeColor !== undefined && pwaConfig.themeColor !== null) ? 'pwa config' : 'root settings';
-    logger.debug(`Using themeColor: ${rawThemeColor} from ${source}`);
+    logger.info(`Using themeColor: ${rawThemeColor} from ${source}`);
   } else {
-    logger.debug(`Using default themeColor: ${themes[color][theme]} from theme`);
+    logger.info(`Using default themeColor: ${themes[color][theme]} from theme`);
   }
 
   const rawBackgroundColor = getConfigValue('backgroundColor', 'backgroundColor', null);
+  logger.info(`rawBackgroundColor value: "${rawBackgroundColor}", pwaConfig.backgroundColor: "${pwaConfig.backgroundColor}"`);
   const backgroundColor = validateHexColor(rawBackgroundColor) || themes[color][theme];
   if (rawBackgroundColor && !validateHexColor(rawBackgroundColor)) {
     logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default "${themes[color][theme]}"`);
   } else if (rawBackgroundColor) {
     const source = (pwaConfig.backgroundColor !== undefined && pwaConfig.backgroundColor !== null) ? 'pwa config' : 'root settings';
-    logger.debug(`Using backgroundColor: ${rawBackgroundColor} from ${source}`);
+    logger.info(`Using backgroundColor: ${rawBackgroundColor} from ${source}`);
   } else {
-    logger.debug(`Using default backgroundColor: ${themes[color][theme]} from theme`);
+    logger.info(`Using default backgroundColor: ${themes[color][theme]} from theme`);
   }
 
   // Build manifest with fallback values
+  const shortNameValue = getConfigValue('shortName', 'shortName', null);
+  logger.info(`shortName from config: "${shortNameValue}", pwaConfig.shortName: "${pwaConfig.shortName}"`);
   const manifest = {
     name: getConfigValue('title', 'title', 'Homepage'),
-    short_name: getConfigValue('shortName', 'shortName', null) || getConfigValue('title', 'title', 'Homepage'),
+    short_name: shortNameValue || getConfigValue('title', 'title', 'Homepage'),
     description: getConfigValue('description', 'description', 'A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.'),
     lang: language,
     start_url: getPwaOnlyValue('startUrl', '/'),  // PWA-specific, use default
