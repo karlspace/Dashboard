@@ -45,7 +45,10 @@ export async function getServerSideProps({ res }) {
   checkAndCopyConfig("settings.yaml");
   const settings = getSettings();
   
-  logger.info(`Settings file location: ${require('path').join(process.env.HOMEPAGE_CONFIG_DIR || require('path').join(process.cwd(), "config"), "settings.yaml")}`);
+  // Log config file location for debugging
+  const configDir = process.env.HOMEPAGE_CONFIG_DIR || join(process.cwd(), "config");
+  const settingsPath = join(configDir, "settings.yaml");
+  logger.info(`Settings file location: ${settingsPath}`);
 
   // Check if PWA configuration exists
   const pwaConfig = settings.pwa || null;
