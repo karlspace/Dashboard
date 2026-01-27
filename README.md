@@ -6,15 +6,20 @@
 
 ## Fork Extensions
 
-This fork adds the following features:
+This fork extends Homepage with additional, optional features.
 
-### World Clock Widget
+---
 
-Branch: feature/worldclock
+### 🌍 World Clock Widget
 
-A new information widget that displays multiple time zones with customizable labels and optional flag emojis.
+**Branch:** `feature/worldclock`
+
+Adds a lightweight information widget for displaying **multiple time zones** with customizable labels and optional country flags.
+Designed for global teams and distributed operations.
 
 ![World Clock Example](docs/images/worldclock-example.png)
+
+#### Example Configuration
 
 ```yaml
 - worldclock:
@@ -34,15 +39,41 @@ A new information widget that displays multiple time zones with customizable lab
         flag: jp
 ```
 
-See [World Clock Documentation](docs/widgets/info/worldclock.md) for full configuration options.
+➡️ See **[World Clock Documentation](docs/widgets/info/worldclock.md)** for all supported options.
 
-### Extended PWA 
+---
 
-Branch: feature/pwa-configuration
+### Extended PWA Configuration
 
-Homepage supports Progressive Web App (PWA) installation with comprehensive manifest customization. The PWA manifest controls how your homepage appears when installed as an app on mobile devices, tablets, and desktops.
+**Branch:** `feature/pwa-configuration`
 
-Full [PWA Documentation](docs/configs/settings.md#pwa-manifest-configuration)
+Homepage supports installation as a **Progressive Web App (PWA)** on mobile devices, tablets, and desktops.
+This feature exposes the full **PWA manifest configuration**, allowing precise control over app name, appearance, icons, colors, and platform-specific behavior.
+
+#### Minimal Example
+
+```yaml
+pwa:
+  title: "Dashboard | BAUER GROUP"
+  shortName: "Dashboard"
+  description: "Dashboard of Company Services at BAUER GROUP"
+
+  display: standalone
+  startUrl: /
+  scope: /
+
+  themeColor: "#FF8500"
+  backgroundColor: "#18181B"
+
+  iconPath: /images/icons
+```
+
+The configuration is added to `settings.yaml` and is automatically converted into a valid PWA manifest.
+
+For the complete list of supported options (icons, categories, Apple settings, orientation, etc.), see:
+➡️ **[PWA Manifest Configuration](docs/configs/settings.md#pwa-manifest-configuration)**
+
+---
 
 ## Using This Fork
 
