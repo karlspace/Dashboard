@@ -117,6 +117,7 @@ export async function getServerSideProps({ res }) {
 
   // PWA config exists, build custom manifest
   logger.info("PWA configuration found, building custom manifest");
+  logger.debug(`PWA config keys: ${Object.keys(pwaConfig).join(', ')}`);
   
   const color = settings.color || "slate";
   const theme = settings.theme || "dark";
@@ -152,6 +153,12 @@ export async function getServerSideProps({ res }) {
   // Get icon path from PWA config only (no root fallback for PWA-specific paths)
   const iconPath = getPwaOnlyValue('iconPath', '');
   const useCustomIcons = iconPath && iconPath.length > 0;
+  
+  if (useCustomIcons) {
+    logger.debug(`Custom icon path configured: ${iconPath}`);
+  } else {
+    logger.debug("No custom icon path configured, using default icons");
+  }
 
   // Generate icon array based on whether custom icons are configured
   let icons;
@@ -246,13 +253,21 @@ export async function getServerSideProps({ res }) {
   const rawThemeColor = getConfigValue('themeColor', 'themeColor', null);
   const themeColor = validateHexColor(rawThemeColor) || themes[color][theme];
   if (rawThemeColor && !validateHexColor(rawThemeColor)) {
-    logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default`);
+    logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default "${themes[color][theme]}"`);
+  } else if (rawThemeColor) {
+    logger.debug(`Using themeColor: ${rawThemeColor} from ${pwaConfig.themeColor ? 'pwa config' : 'root settings'}`);
+  } else {
+    logger.debug(`Using default themeColor: ${themes[color][theme]} from theme`);
   }
 
   const rawBackgroundColor = getConfigValue('backgroundColor', 'backgroundColor', null);
   const backgroundColor = validateHexColor(rawBackgroundColor) || themes[color][theme];
   if (rawBackgroundColor && !validateHexColor(rawBackgroundColor)) {
-    logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default`);
+    logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default "${themes[color][theme]}"`);
+  } else if (rawBackgroundColor) {
+    logger.debug(`Using backgroundColor: ${rawBackgroundColor} from ${pwaConfig.backgroundColor ? 'pwa config' : 'root settings'}`);
+  } else {
+    logger.debug(`Using default backgroundColor: ${themes[color][theme]} from theme`);
   }
 
   // Build manifest with fallback values
@@ -310,6 +325,9 @@ export async function getServerSideProps({ res }) {
       logger.warn("Invalid appleMobileWebAppTitle, must be a non-empty string");
     }
   }
+
+  // Log final manifest summary for debugging
+  logger.info(`Generated PWA manifest: name="${manifest.name}", short_name="${manifest.short_name}", theme_color="${manifest.theme_color}", background_color="${manifest.background_color}", icons=${manifest.icons.length}`);
 
   res.setHeader("Content-Type", "application/manifest+json");
   // Set cache headers to ensure manifest updates when config changes
