@@ -91,6 +91,264 @@ favicon: https://www.google.com/favicon.ico
 
 Or you may pass the path to a local image relative to the `/app/public` directory. See [Background Image](#background-image) for more detailed information on how to provide your own files.
 
+
+## PWA Manifest Configuration
+
+Homepage supports Progressive Web App (PWA) installation with comprehensive manifest customization. The PWA manifest controls how your homepage appears when installed as an app on mobile devices, tablets, and desktops.
+
+### Basic PWA Settings
+
+#### Title and Short Name
+
+The `title` is used as both the app name and short name by default. You can customize the short name separately for home screen display:
+
+```yaml
+title: "Dashboard | BAUER GROUP"
+shortName: "Dashboard"  # Optional, defaults to title
+```
+
+#### Description
+
+Customize the app description shown in app stores and installation prompts:
+
+```yaml
+description: "Dashboard of Company Services at BAUER GROUP"
+```
+
+#### Language
+
+Set the primary language for your PWA manifest:
+
+```yaml
+language: en  # ISO 639-1 language code (e.g., en, de, fr, es)
+```
+
+Supports language codes with regions (e.g., `en-US`, `de-DE`, `fr-FR`).
+
+### PWA Display Settings
+
+#### Display Mode
+
+Controls how the PWA appears when launched:
+
+```yaml
+display: standalone  # Options: standalone, fullscreen, minimal-ui, browser
+```
+
+- **standalone** (default): Looks like a native app, hides browser UI
+- **fullscreen**: Full screen without any browser UI
+- **minimal-ui**: Similar to standalone with minimal browser controls
+- **browser**: Opens in a regular browser tab
+
+#### Orientation
+
+Set the preferred screen orientation:
+
+```yaml
+orientation: any  # Options: any, natural, landscape, portrait
+```
+
+Additional options: `portrait-primary`, `portrait-secondary`, `landscape-primary`, `landscape-secondary`
+
+#### Scope and Start URL
+
+Define the PWA's navigation scope and starting point:
+
+```yaml
+scope: /         # Navigation scope, defaults to "/"
+startUrl: /      # Starting URL when app launches, defaults to "/"
+```
+
+### Theme Customization
+
+#### Colors
+
+Override theme colors with custom hex values:
+
+```yaml
+themeColor: "#FF8500"        # Hex color for browser UI
+backgroundColor: "#18181B"    # Hex color for splash screen background
+```
+
+If not specified, these will use the selected theme's default colors (based on `color` and `theme` settings).
+
+**Color format:** Must be valid hex colors (`#RRGGBB` or `#RGB`). Invalid colors will fall back to theme defaults with a warning.
+
+#### Categories
+
+Specify app categories for app stores:
+
+```yaml
+categories:
+  - business
+  - productivity
+  - utilities
+```
+
+Common categories: `business`, `education`, `entertainment`, `finance`, `fitness`, `games`, `lifestyle`, `medical`, `music`, `news`, `productivity`, `shopping`, `social`, `sports`, `travel`, `utilities`
+
+### Icon Configuration
+
+#### Custom Icon Path
+
+Configure a directory containing your custom PWA icons:
+
+```yaml
+iconPath: /images/icons
+```
+
+When `iconPath` is set, Homepage will look for the following icon files:
+
+**Standard Icons (required):**
+- `favicon-16x16.png`
+- `favicon-32x32.png`
+- `favicon-48x48.png`
+- `favicon-72x72.png`
+- `favicon-96x96.png`
+- `favicon-128x128.png`
+- `favicon-144x144.png`
+- `favicon-152x152.png`
+- `favicon-180x180.png`
+- `favicon-192x192.png`
+- `favicon-384x384.png`
+- `favicon-512x512.png`
+
+**Special Purpose Icons (optional):**
+- `apple-touch-icon.png` (180x180) - iOS home screen icon
+- `maskable-icon-192x192.png` - Adaptive icon for Android
+- `maskable-icon-512x512.png` - Adaptive icon for Android
+
+!!! note "Icon File Validation"
+    Homepage validates that icon files exist before including them in the manifest. Only existing icons will be included, preventing broken references. If no custom icons are found, the system falls back to default icons automatically.
+
+!!! warning "Volume Mount Required"
+    To use custom icons, mount your icon directory to the Docker container:
+    
+    ```yaml
+    volumes:
+      - /path/to/your/icons:/app/public/images/icons
+    ```
+
+#### Icon File Guidelines
+
+**File Format:** PNG format recommended for best compatibility
+
+**Sizes:** Provide multiple sizes for optimal display across devices
+- Small sizes (16-48px): Browser tabs and taskbar
+- Medium sizes (72-152px): Mobile home screens
+- Large sizes (192-512px): App stores and high-DPI displays
+
+**Maskable Icons:** For Android adaptive icons, ensure your design works within the safe zone (80% of canvas centered)
+
+### Apple-Specific Settings
+
+Configure iOS/macOS specific PWA behavior:
+
+```yaml
+appleMobileWebAppCapable: yes           # Enable iOS web app mode
+appleMobileWebAppStatusBarStyle: black-translucent  # Status bar style
+appleMobileWebAppTitle: "Dashboard"     # iOS home screen name
+```
+
+**Status Bar Styles:**
+- `default`: White background with black text
+- `black`: Black background with white text
+- `black-translucent`: Translucent black, content shows behind
+
+### Complete Example
+
+Here's a comprehensive PWA configuration example:
+
+```yaml
+# Basic App Info
+title: "Dashboard | BAUER GROUP"
+shortName: "Dashboard"
+description: "Dashboard of Company Services at BAUER GROUP"
+language: en
+
+# PWA Display
+display: standalone
+orientation: any
+scope: /
+startUrl: /
+
+# Theme Colors
+themeColor: "#FF8500"
+backgroundColor: "#18181B"
+
+# Categories
+categories:
+  - business
+  - productivity
+
+# Custom Icons
+iconPath: /images/icons
+
+# Apple Settings
+appleMobileWebAppCapable: yes
+appleMobileWebAppStatusBarStyle: black-translucent
+appleMobileWebAppTitle: "Dashboard"
+
+# Standard Settings
+theme: dark
+color: slate
+favicon: /images/icons/favicon-32x32.png
+```
+
+### Validation and Best Practices
+
+Homepage automatically validates all PWA manifest settings:
+
+**Validated Parameters:**
+- Language codes (ISO format)
+- Display modes (PWA spec)
+- Orientation values (PWA spec)
+- Hex color formats
+- Icon file existence
+- Apple status bar styles
+
+**Invalid values** are logged as warnings and replaced with safe defaults.
+
+### Troubleshooting
+
+#### Icons Not Showing
+
+1. **Check file paths**: Ensure icons exist at specified path
+2. **Check permissions**: Files must be readable by the container
+3. **Check logs**: Look for "Icon not found" warnings in logs
+4. **Verify mount**: Ensure volume is properly mounted in Docker
+
+#### Manifest Not Updating
+
+1. **Clear browser cache**: Force refresh with Ctrl+Shift+R (Cmd+Shift+R on Mac)
+2. **Check version**: Manifest includes versioning for cache busting
+3. **Rebuild**: Restart the container to regenerate manifest
+
+#### PWA Not Installing
+
+1. **HTTPS required**: PWAs require HTTPS (localhost works for testing)
+2. **Manifest valid**: Check browser DevTools → Application → Manifest
+3. **Service worker**: Ensure no service worker conflicts
+4. **Icons present**: At least one 192x192 and one 512x512 icon required
+
+### Testing Your PWA
+
+1. **Chrome DevTools**: Open Application tab → Manifest to see parsed manifest
+2. **Lighthouse**: Run PWA audit to check compliance
+3. **Test Installation**: Click install prompt or use browser menu
+4. **Mobile Testing**: Test on actual devices for best results
+
+### Cache and Versioning
+
+Homepage automatically handles manifest versioning:
+
+- **Build Version**: Timestamp added at build time forces reload on deploy
+- **ETag Validation**: Content-based hashing enables efficient cache validation
+- **No-Cache Headers**: Ensures manifest validates on each request
+- **Config Changes**: Manifest updates immediately when settings change
+
+No manual cache clearing needed - the system handles it automatically!
+
 ## Theme
 
 You can configure a fixed theme (and disable the theme switcher) by passing the `theme` option, like so:
