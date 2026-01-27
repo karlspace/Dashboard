@@ -197,7 +197,7 @@ Configure a directory containing your custom PWA icons:
 iconPath: /images/icons
 ```
 
-**Default Behavior:** If `iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). Icons are never skipped - the system always provides fallback icons to ensure PWA functionality.
+**Default Behavior:** If `iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). The system always provides fallback icons to ensure PWA functionality.
 
 When `iconPath` is set, Homepage will look for the following icon files:
 
