@@ -197,6 +197,8 @@ Configure a directory containing your custom PWA icons:
 iconPath: /images/icons
 ```
 
+**Default Behavior:** If `iconPath` is not set or omitted, Homepage will use the default built-in icons (`android-chrome-192x192.png` and `android-chrome-512x512.png` from the root path). Icons are never skipped - the system always provides fallback icons to ensure PWA functionality.
+
 When `iconPath` is set, Homepage will look for the following icon files:
 
 **Standard Icons (required):**
@@ -289,10 +291,9 @@ appleMobileWebAppCapable: yes
 appleMobileWebAppStatusBarStyle: black-translucent
 appleMobileWebAppTitle: "Dashboard"
 
-# Standard Settings
+# Standard Settings (non-PWA, but affect theme defaults)
 theme: dark
 color: slate
-favicon: /images/icons/favicon-32x32.png
 ```
 
 ### Validation and Best Practices
