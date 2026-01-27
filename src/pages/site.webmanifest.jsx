@@ -11,6 +11,8 @@ export async function getServerSideProps({ res }) {
   const manifest = {
     name: settings.title || "Homepage",
     short_name: settings.title || "Homepage",
+    description: settings.description || "A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.",
+    lang: settings.language || "en",
     icons: [
       {
         src: "/android-chrome-192x192.png?v=2",
