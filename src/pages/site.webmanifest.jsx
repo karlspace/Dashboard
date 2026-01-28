@@ -44,19 +44,127 @@ function checkIconExists(iconPath) {
 export async function getServerSideProps({ res }) {
   checkAndCopyConfig("settings.yaml");
   const settings = getSettings();
+  
+  // Log config file location for debugging
+  const configDir = process.env.HOMEPAGE_CONFIG_DIR || join(process.cwd(), "config");
+  const settingsPath = join(configDir, "settings.yaml");
+  logger.info(`Settings file location: ${settingsPath}`);
 
+  // Check if PWA configuration exists
+  const pwaConfig = settings.pwa || null;
+  
+  // If no PWA config, return default minimal manifest
+  if (!pwaConfig) {
+    logger.info("No PWA configuration found, using default manifest");
+    
+    // Validate language from root settings
+    const language = validateLanguage(settings.language);
+    
+    // Validate display and orientation from root settings
+    const display = validateDisplay(settings.display);
+    const orientation = validateOrientation(settings.orientation);
+    
+    // Get theme colors from root settings or defaults
+    const color = settings.color || "slate";
+    const theme = settings.theme || "dark";
+    const themeColor = validateHexColor(settings.themeColor) || themes[color][theme];
+    const backgroundColor = validateHexColor(settings.backgroundColor) || themes[color][theme];
+    
+    // Validate default icons exist
+    const defaultIconCandidates = [
+      { src: "/android-chrome-192x192.png?v=2", sizes: "192x192", type: "image/png" },
+      { src: "/android-chrome-512x512.png?v=2", sizes: "512x512", type: "image/png" },
+    ];
+    
+    const defaultIcons = defaultIconCandidates.filter((icon) => {
+      const exists = checkIconExists(icon.src);
+      if (!exists) {
+        logger.warn(`Default icon not found: ${icon.src}, excluding from manifest`);
+      }
+      return exists;
+    });
+    
+    if (defaultIcons.length === 0) {
+      logger.warn("No default icons found for default manifest");
+    }
+    
+    const defaultManifest = {
+      name: settings.title || "Homepage",
+      short_name: settings.title || "Homepage",
+      description: settings.description || "A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.",
+      lang: language,
+      start_url: settings.startUrl || "/",
+      scope: settings.scope || "/",
+      display,
+      orientation,
+      background_color: backgroundColor,
+      theme_color: themeColor,
+      icons: defaultIcons,
+    };
+    
+    res.setHeader("Content-Type", "application/manifest+json");
+    res.setHeader("Cache-Control", "no-cache, must-revalidate");
+    const manifestJson = JSON.stringify(defaultManifest);
+    const etag = createHash("md5").update(manifestJson).digest("hex");
+    res.setHeader("ETag", `"${etag}"`);
+    
+    const clientEtag = res.req.headers["if-none-match"];
+    if (clientEtag === `"${etag}"`) {
+      res.statusCode = 304;
+      res.end();
+      return { props: {} };
+    }
+    
+    res.write(manifestJson);
+    res.end();
+    return { props: {} };
+  }
+
+  // PWA config exists, build custom manifest
+  logger.info("PWA configuration found, building custom manifest");
+  logger.debug(`PWA config keys: ${Object.keys(pwaConfig).join(', ')}`);
+  logger.debug(`PWA config: ${JSON.stringify(pwaConfig, null, 2)}`);
+  
   const color = settings.color || "slate";
   const theme = settings.theme || "dark";
 
-  // Validate language
-  const language = validateLanguage(settings.language);
-  if (settings.language && settings.language !== language) {
-    logger.warn(`Invalid language code "${settings.language}", using default "en"`);
+  // Helper function to get value with fallback: pwa.field -> settings.field -> default
+  // Used for general settings that can fall back to root settings
+  const getConfigValue = (pwaField, settingsField, defaultValue) => {
+    if (pwaConfig[pwaField] !== undefined && pwaConfig[pwaField] !== null) {
+      return pwaConfig[pwaField];
+    }
+    if (settings[settingsField] !== undefined && settings[settingsField] !== null) {
+      return settings[settingsField];
+    }
+    return defaultValue;
+  };
+  
+  // Helper function for PWA-specific settings that should NOT fall back to root settings
+  // Only use pwa.field -> default (no root fallback)
+  const getPwaOnlyValue = (pwaField, defaultValue) => {
+    if (pwaConfig[pwaField] !== undefined && pwaConfig[pwaField] !== null) {
+      return pwaConfig[pwaField];
+    }
+    return defaultValue;
+  };
+
+  // Validate language - can fall back to root settings
+  const rawLanguage = getConfigValue('language', 'language', null);
+  const language = validateLanguage(rawLanguage);
+  if (rawLanguage && rawLanguage !== language) {
+    logger.warn(`Invalid language code "${rawLanguage}", using default "en"`);
   }
 
-  // Get icon path from settings, default to /images/icons or root
-  const iconPath = settings.iconPath || "";
-  const useCustomIcons = settings.iconPath && settings.iconPath.length > 0;
+  // Get icon path from PWA config only (no root fallback for PWA-specific paths)
+  const iconPath = getPwaOnlyValue('iconPath', '');
+  const useCustomIcons = iconPath && iconPath.length > 0;
+  
+  if (useCustomIcons) {
+    logger.debug(`Custom icon path configured: ${iconPath}`);
+  } else {
+    logger.debug("No custom icon path configured, using default icons");
+  }
 
   // Generate icon array based on whether custom icons are configured
   let icons;
@@ -92,49 +200,108 @@ export async function getServerSideProps({ res }) {
     // If no custom icons exist, fall back to defaults
     if (icons.length === 0) {
       logger.warn(`No custom icons found in ${iconPath}, falling back to default icons`);
-      icons = [
+      const defaultIcons = [
         { src: "/android-chrome-192x192.png?v=2", sizes: "192x192", type: "image/png" },
         { src: "/android-chrome-512x512.png?v=2", sizes: "512x512", type: "image/png" },
       ];
+      
+      // Validate default icons exist
+      icons = defaultIcons.filter((icon) => {
+        const exists = checkIconExists(icon.src);
+        if (!exists) {
+          logger.warn(`Default icon not found: ${icon.src}, excluding from manifest`);
+        }
+        return exists;
+      });
+      
+      if (icons.length === 0) {
+        logger.warn("No default icons found, manifest will have no icons");
+      }
     }
   } else {
-    icons = [
+    // No custom icon path, validate and use default icons
+    const defaultIcons = [
       { src: "/android-chrome-192x192.png?v=2", sizes: "192x192", type: "image/png" },
       { src: "/android-chrome-512x512.png?v=2", sizes: "512x512", type: "image/png" },
     ];
+    
+    // Validate default icons exist
+    icons = defaultIcons.filter((icon) => {
+      const exists = checkIconExists(icon.src);
+      if (!exists) {
+        logger.warn(`Default icon not found: ${icon.src}, excluding from manifest`);
+      }
+      return exists;
+    });
+    
+    // If no default icons exist, provide empty array (manifest will still be valid)
+    if (icons.length === 0) {
+      logger.warn("No default icons found, manifest will have no icons");
+    }
   }
 
-  // Validate display and orientation
-  const display = validateDisplay(settings.display);
-  if (settings.display && settings.display !== display) {
-    logger.warn(`Invalid display value "${settings.display}", using default "standalone"`);
+  // Validate PWA-specific display and orientation settings
+  // These are PWA-specific and should NOT fall back to root settings
+  // Use defaults if not specified in pwa section
+  const rawDisplay = getPwaOnlyValue('display', 'standalone');
+  const display = validateDisplay(rawDisplay);
+  if (rawDisplay && rawDisplay !== display) {
+    logger.warn(`Invalid display value "${rawDisplay}", using default "standalone"`);
   }
 
-  const orientation = validateOrientation(settings.orientation);
-  if (settings.orientation && settings.orientation !== orientation) {
-    logger.warn(`Invalid orientation value "${settings.orientation}", using default "any"`);
+  const rawOrientation = getPwaOnlyValue('orientation', 'any');
+  const orientation = validateOrientation(rawOrientation);
+  if (rawOrientation && rawOrientation !== orientation) {
+    logger.warn(`Invalid orientation value "${rawOrientation}", using default "any"`);
   }
 
-  // Validate colors
-  const themeColor = validateHexColor(settings.themeColor) || themes[color][theme];
-  if (settings.themeColor && !validateHexColor(settings.themeColor)) {
-    logger.warn(`Invalid themeColor "${settings.themeColor}", using theme default`);
+  // Validate colors - can fall back to root settings
+  const rawThemeColor = getConfigValue('themeColor', 'themeColor', null);
+  logger.debug(`rawThemeColor value: "${rawThemeColor}", pwaConfig.themeColor: "${pwaConfig.themeColor}"`);
+  const themeColor = validateHexColor(rawThemeColor) || themes[color][theme];
+  if (rawThemeColor && !validateHexColor(rawThemeColor)) {
+    logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default "${themes[color][theme]}"`);
+  } else if (rawThemeColor) {
+    const source = (pwaConfig.themeColor !== undefined && pwaConfig.themeColor !== null) ? 'pwa config' : 'root settings';
+    logger.debug(`Using themeColor: ${rawThemeColor} from ${source}`);
+  } else {
+    logger.debug(`Using default themeColor: ${themes[color][theme]} from theme`);
   }
 
-  const backgroundColor = validateHexColor(settings.backgroundColor) || themes[color][theme];
-  if (settings.backgroundColor && !validateHexColor(settings.backgroundColor)) {
-    logger.warn(`Invalid backgroundColor "${settings.backgroundColor}", using theme default`);
+  const rawBackgroundColor = getConfigValue('backgroundColor', 'backgroundColor', null);
+  logger.debug(`rawBackgroundColor value: "${rawBackgroundColor}", pwaConfig.backgroundColor: "${pwaConfig.backgroundColor}"`);
+  const backgroundColor = validateHexColor(rawBackgroundColor) || themes[color][theme];
+  if (rawBackgroundColor && !validateHexColor(rawBackgroundColor)) {
+    logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default "${themes[color][theme]}"`);
+  } else if (rawBackgroundColor) {
+    const source = (pwaConfig.backgroundColor !== undefined && pwaConfig.backgroundColor !== null) ? 'pwa config' : 'root settings';
+    logger.debug(`Using backgroundColor: ${rawBackgroundColor} from ${source}`);
+  } else {
+    logger.debug(`Using default backgroundColor: ${themes[color][theme]} from theme`);
   }
 
+  // Build manifest with fallback values
+  const shortNameValue = getConfigValue('shortName', 'shortName', null);
+  logger.debug(`shortName from config: "${shortNameValue}", pwaConfig.shortName: "${pwaConfig.shortName}"`);
+  
+  // Validate shortName is a non-empty string, otherwise fall back to title
+  let shortName;
+  if (shortNameValue !== null && shortNameValue !== undefined && typeof shortNameValue === 'string' && shortNameValue.trim().length > 0) {
+    shortName = shortNameValue;
+  } else {
+    if (shortNameValue !== null && shortNameValue !== undefined) {
+      logger.warn(`Invalid shortName "${shortNameValue}", must be a non-empty string, using title instead`);
+    }
+    shortName = getConfigValue('title', 'title', 'Homepage');
+  }
+  
   const manifest = {
-    name: settings.title || "Homepage",
-    short_name: settings.shortName || settings.title || "Homepage",
-    description:
-      settings.description ||
-      "A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.",
+    name: getConfigValue('title', 'title', 'Homepage'),
+    short_name: shortName,
+    description: getConfigValue('description', 'description', 'A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.'),
     lang: language,
-    start_url: settings.startUrl || "/",
-    scope: settings.scope || "/",
+    start_url: getPwaOnlyValue('startUrl', '/'),  // PWA-specific, use default
+    scope: getPwaOnlyValue('scope', '/'),         // PWA-specific, use default
     display,
     orientation,
     background_color: backgroundColor,
@@ -143,40 +310,48 @@ export async function getServerSideProps({ res }) {
   };
 
   // Add optional fields if they are set and valid
-  if (settings.categories && Array.isArray(settings.categories)) {
+  // Categories - only add if specified in pwa section (no root fallback for PWA-specific categorization)
+  const categories = getPwaOnlyValue('categories', null);
+  if (categories && Array.isArray(categories)) {
     // Validate that categories are non-empty strings
-    const validCategories = settings.categories.filter(cat => typeof cat === "string" && cat.trim().length > 0);
+    const validCategories = categories.filter(cat => typeof cat === "string" && cat.trim().length > 0);
     if (validCategories.length > 0) {
       manifest.categories = validCategories;
-    } else if (settings.categories.length > 0) {
+    } else if (categories.length > 0) {
       logger.warn("Invalid categories array, must contain non-empty strings");
     }
   }
 
-  // Add Apple-specific web app settings with validation
-  if (settings.appleMobileWebAppCapable !== undefined) {
-    const capableValue = settings.appleMobileWebAppCapable === "yes" || settings.appleMobileWebAppCapable === true ? "yes" : "no";
+  // Add Apple-specific web app settings - only from pwa section (PWA-specific)
+  const appleMobileWebAppCapable = getPwaOnlyValue('appleMobileWebAppCapable', null);
+  if (appleMobileWebAppCapable !== null && appleMobileWebAppCapable !== undefined) {
+    const capableValue = appleMobileWebAppCapable === "yes" || appleMobileWebAppCapable === true ? "yes" : "no";
     manifest["apple-mobile-web-app-capable"] = capableValue;
   }
 
-  if (settings.appleMobileWebAppStatusBarStyle) {
+  const appleMobileWebAppStatusBarStyle = getPwaOnlyValue('appleMobileWebAppStatusBarStyle', null);
+  if (appleMobileWebAppStatusBarStyle) {
     const validStyles = ["default", "black", "black-translucent"];
-    const style = validStyles.includes(settings.appleMobileWebAppStatusBarStyle) 
-      ? settings.appleMobileWebAppStatusBarStyle 
+    const style = validStyles.includes(appleMobileWebAppStatusBarStyle) 
+      ? appleMobileWebAppStatusBarStyle 
       : "default";
-    if (settings.appleMobileWebAppStatusBarStyle !== style) {
-      logger.warn(`Invalid appleMobileWebAppStatusBarStyle "${settings.appleMobileWebAppStatusBarStyle}", using "default"`);
+    if (appleMobileWebAppStatusBarStyle !== style) {
+      logger.warn(`Invalid appleMobileWebAppStatusBarStyle "${appleMobileWebAppStatusBarStyle}", using "default"`);
     }
     manifest["apple-mobile-web-app-status-bar-style"] = style;
   }
 
-  if (settings.appleMobileWebAppTitle) {
-    if (typeof settings.appleMobileWebAppTitle === "string" && settings.appleMobileWebAppTitle.trim().length > 0) {
-      manifest["apple-mobile-web-app-title"] = settings.appleMobileWebAppTitle;
+  const appleMobileWebAppTitle = getPwaOnlyValue('appleMobileWebAppTitle', null);
+  if (appleMobileWebAppTitle) {
+    if (typeof appleMobileWebAppTitle === "string" && appleMobileWebAppTitle.trim().length > 0) {
+      manifest["apple-mobile-web-app-title"] = appleMobileWebAppTitle;
     } else {
       logger.warn("Invalid appleMobileWebAppTitle, must be a non-empty string");
     }
   }
+
+  // Log final manifest summary for debugging
+  logger.info(`Generated PWA manifest: name="${manifest.name}", short_name="${manifest.short_name}", theme_color="${manifest.theme_color}", background_color="${manifest.background_color}", icons=${manifest.icons.length}`);
 
   res.setHeader("Content-Type", "application/manifest+json");
   // Set cache headers to ensure manifest updates when config changes
