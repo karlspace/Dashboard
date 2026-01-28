@@ -44,6 +44,11 @@ function checkIconExists(iconPath) {
 export async function getServerSideProps({ res }) {
   checkAndCopyConfig("settings.yaml");
   const settings = getSettings();
+  
+  // Log config file location for debugging
+  const configDir = process.env.HOMEPAGE_CONFIG_DIR || join(process.cwd(), "config");
+  const settingsPath = join(configDir, "settings.yaml");
+  logger.info(`Settings file location: ${settingsPath}`);
 
   // Check if PWA configuration exists
   const pwaConfig = settings.pwa || null;
@@ -117,6 +122,8 @@ export async function getServerSideProps({ res }) {
 
   // PWA config exists, build custom manifest
   logger.info("PWA configuration found, building custom manifest");
+  logger.debug(`PWA config keys: ${Object.keys(pwaConfig).join(', ')}`);
+  logger.debug(`PWA config: ${JSON.stringify(pwaConfig, null, 2)}`);
   
   const color = settings.color || "slate";
   const theme = settings.theme || "dark";
@@ -152,6 +159,12 @@ export async function getServerSideProps({ res }) {
   // Get icon path from PWA config only (no root fallback for PWA-specific paths)
   const iconPath = getPwaOnlyValue('iconPath', '');
   const useCustomIcons = iconPath && iconPath.length > 0;
+  
+  if (useCustomIcons) {
+    logger.debug(`Custom icon path configured: ${iconPath}`);
+  } else {
+    logger.debug("No custom icon path configured, using default icons");
+  }
 
   // Generate icon array based on whether custom icons are configured
   let icons;
@@ -244,21 +257,47 @@ export async function getServerSideProps({ res }) {
 
   // Validate colors - can fall back to root settings
   const rawThemeColor = getConfigValue('themeColor', 'themeColor', null);
+  logger.debug(`rawThemeColor value: "${rawThemeColor}", pwaConfig.themeColor: "${pwaConfig.themeColor}"`);
   const themeColor = validateHexColor(rawThemeColor) || themes[color][theme];
   if (rawThemeColor && !validateHexColor(rawThemeColor)) {
-    logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default`);
+    logger.warn(`Invalid themeColor "${rawThemeColor}", using theme default "${themes[color][theme]}"`);
+  } else if (rawThemeColor) {
+    const source = (pwaConfig.themeColor !== undefined && pwaConfig.themeColor !== null) ? 'pwa config' : 'root settings';
+    logger.debug(`Using themeColor: ${rawThemeColor} from ${source}`);
+  } else {
+    logger.debug(`Using default themeColor: ${themes[color][theme]} from theme`);
   }
 
   const rawBackgroundColor = getConfigValue('backgroundColor', 'backgroundColor', null);
+  logger.debug(`rawBackgroundColor value: "${rawBackgroundColor}", pwaConfig.backgroundColor: "${pwaConfig.backgroundColor}"`);
   const backgroundColor = validateHexColor(rawBackgroundColor) || themes[color][theme];
   if (rawBackgroundColor && !validateHexColor(rawBackgroundColor)) {
-    logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default`);
+    logger.warn(`Invalid backgroundColor "${rawBackgroundColor}", using theme default "${themes[color][theme]}"`);
+  } else if (rawBackgroundColor) {
+    const source = (pwaConfig.backgroundColor !== undefined && pwaConfig.backgroundColor !== null) ? 'pwa config' : 'root settings';
+    logger.debug(`Using backgroundColor: ${rawBackgroundColor} from ${source}`);
+  } else {
+    logger.debug(`Using default backgroundColor: ${themes[color][theme]} from theme`);
   }
 
   // Build manifest with fallback values
+  const shortNameValue = getConfigValue('shortName', 'shortName', null);
+  logger.debug(`shortName from config: "${shortNameValue}", pwaConfig.shortName: "${pwaConfig.shortName}"`);
+  
+  // Validate shortName is a non-empty string, otherwise fall back to title
+  let shortName;
+  if (shortNameValue !== null && shortNameValue !== undefined && typeof shortNameValue === 'string' && shortNameValue.trim().length > 0) {
+    shortName = shortNameValue;
+  } else {
+    if (shortNameValue !== null && shortNameValue !== undefined) {
+      logger.warn(`Invalid shortName "${shortNameValue}", must be a non-empty string, using title instead`);
+    }
+    shortName = getConfigValue('title', 'title', 'Homepage');
+  }
+  
   const manifest = {
     name: getConfigValue('title', 'title', 'Homepage'),
-    short_name: getConfigValue('shortName', 'shortName', null) || getConfigValue('title', 'title', 'Homepage'),
+    short_name: shortName,
     description: getConfigValue('description', 'description', 'A highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.'),
     lang: language,
     start_url: getPwaOnlyValue('startUrl', '/'),  // PWA-specific, use default
@@ -310,6 +349,9 @@ export async function getServerSideProps({ res }) {
       logger.warn("Invalid appleMobileWebAppTitle, must be a non-empty string");
     }
   }
+
+  // Log final manifest summary for debugging
+  logger.info(`Generated PWA manifest: name="${manifest.name}", short_name="${manifest.short_name}", theme_color="${manifest.theme_color}", background_color="${manifest.background_color}", icons=${manifest.icons.length}`);
 
   res.setHeader("Content-Type", "application/manifest+json");
   // Set cache headers to ensure manifest updates when config changes
