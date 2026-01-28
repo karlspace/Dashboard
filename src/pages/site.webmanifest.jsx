@@ -48,7 +48,7 @@ export async function getServerSideProps({ res }) {
   // Log config file location for debugging
   const configDir = process.env.HOMEPAGE_CONFIG_DIR || join(process.cwd(), "config");
   const settingsPath = join(configDir, "settings.yaml");
-  logger.info(`Settings file location: ${settingsPath}`);
+  logger.debug(`Settings file location: ${settingsPath}`);
 
   // Check if PWA configuration exists
   const pwaConfig = settings.pwa || null;
@@ -121,7 +121,7 @@ export async function getServerSideProps({ res }) {
   }
 
   // PWA config exists, build custom manifest
-  logger.info("PWA configuration found, building custom manifest");
+  logger.debug("PWA configuration found, building custom manifest");
   logger.debug(`PWA config keys: ${Object.keys(pwaConfig).join(', ')}`);
   logger.debug(`PWA config: ${JSON.stringify(pwaConfig, null, 2)}`);
   
@@ -351,7 +351,7 @@ export async function getServerSideProps({ res }) {
   }
 
   // Log final manifest summary for debugging
-  logger.info(`Generated PWA manifest: name="${manifest.name}", short_name="${manifest.short_name}", theme_color="${manifest.theme_color}", background_color="${manifest.background_color}", icons=${manifest.icons.length}`);
+  logger.debug(`Generated PWA manifest: name="${manifest.name}", short_name="${manifest.short_name}", theme_color="${manifest.theme_color}", background_color="${manifest.background_color}", icons=${manifest.icons.length}`);
 
   res.setHeader("Content-Type", "application/manifest+json");
   // Set cache headers to ensure manifest updates when config changes
