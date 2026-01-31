@@ -71,7 +71,7 @@ pwa:
 The configuration is added to `settings.yaml` and is automatically converted into a valid PWA manifest.
 
 For the complete list of supported options (icons, categories, Apple settings, orientation, etc.), see:
-➡️ **[PWA Manifest Configuration](docs/configs/settings.md#pwa-manifest-configuration)**
+➡️ **[PWA Configuration](docs/configs/pwa.md)**
 
 ---
 
