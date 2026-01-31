@@ -107,6 +107,16 @@
         "episodes": "Episodes",
         "songs": "Songs"
     },
+    "jellyfin": {
+        "playing": "Playing",
+        "transcoding": "Transcoding",
+        "bitrate": "Bitrate",
+        "no_active": "No Active Streams",
+        "movies": "Movies",
+        "series": "Series",
+        "episodes": "Episodes",
+        "songs": "Songs"
+    },
     "esphome": {
         "offline": "Offline",
         "offline_alt": "Offline",
@@ -704,6 +714,10 @@
         "days": "Days",
         "uptime": "Uptime",
         "volumeAvailable": "Available"
+    },
+    "dispatcharr": {
+        "channels": "Channels",
+        "streams": "Streams"
     },
     "mylar": {
         "series": "Series",
