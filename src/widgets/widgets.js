@@ -23,6 +23,7 @@ import customapi from "./customapi/widget";
 import deluge from "./deluge/widget";
 import develancacheui from "./develancacheui/widget";
 import diskstation from "./diskstation/widget";
+import dispatcharr from "./dispatcharr/widget";
 import dockhand from "./dockhand/widget";
 import downloadstation from "./downloadstation/widget";
 import emby from "./emby/widget";
@@ -53,6 +54,7 @@ import homebridge from "./homebridge/widget";
 import immich from "./immich/widget";
 import jackett from "./jackett/widget";
 import jdownloader from "./jdownloader/widget";
+import jellyfin from "./jellyfin/widget";
 import jellyseerr from "./jellyseerr/widget";
 import jellystat from "./jellystat/widget";
 import karakeep from "./karakeep/widget";
@@ -172,6 +174,7 @@ const widgets = {
   deluge,
   develancacheui,
   diskstation,
+  dispatcharr,
   dockhand,
   downloadstation,
   emby,
@@ -205,7 +208,7 @@ const widgets = {
   immich,
   jackett,
   jdownloader,
-  jellyfin: emby,
+  jellyfin,
   jellyseerr,
   jellystat,
   kavita,
