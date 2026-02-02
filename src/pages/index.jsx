@@ -285,12 +285,53 @@ function Home({ initialSettings }) {
     [settings.layout],
   );
 
+  // Initialize tab from URL hash on mount and handle hash changes
   useEffect(() => {
-    if (!activeTab) {
-      const initialTab = asPath.substring(asPath.indexOf("#") + 1);
-      setActiveTab(initialTab === "/" ? slugifyAndEncode(tabs["0"]) : initialTab);
+    // Function to get hash from URL (handles both asPath and window.location.hash)
+    const getHashFromURL = () => {
+      // First try window.location.hash (more reliable in PWA mode)
+      if (typeof window !== 'undefined' && window.location.hash) {
+        return window.location.hash.substring(1); // Remove the # prefix
+      }
+      // Fallback to Next.js asPath
+      const hashIndex = asPath.indexOf("#");
+      if (hashIndex !== -1) {
+        return asPath.substring(hashIndex + 1);
+      }
+      return "";
+    };
+
+    // Function to update the active tab based on the current hash
+    const updateTabFromHash = () => {
+      const hash = getHashFromURL();
+      
+      if (hash && hash !== "/" && hash !== activeTab) {
+        // Hash exists and is different from current tab, update it
+        setActiveTab(hash);
+      } else if (!hash && !activeTab && tabs.length > 0) {
+        // No hash and no active tab, set to first tab
+        setActiveTab(slugifyAndEncode(tabs[0]));
+      }
+    };
+
+    // Set initial tab on mount
+    updateTabFromHash();
+
+    // Listen for hash changes (important for PWA shortcuts)
+    const handleHashChange = () => {
+      updateTabFromHash();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', handleHashChange);
     }
-  });
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('hashchange', handleHashChange);
+      }
+    };
+  }, [tabs, asPath, activeTab, setActiveTab]); // Re-run when tabs, asPath, activeTab, or setActiveTab changes
 
   const servicesAndBookmarksGroups = useMemo(() => {
     const tabGroupFilter = (g) => g && [activeTab, ""].includes(slugifyAndEncode(settings.layout?.[g.name]?.tab));
