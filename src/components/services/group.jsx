@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
 import { columnMap } from "../../utils/layout/columns";
+import slugify from "../../utils/slugify";
 
 export default function ServicesGroup({
   group,
@@ -28,6 +29,7 @@ export default function ServicesGroup({
   return (
     <div
       key={group.name}
+      id={slugify(group.name)}
       className={classNames(
         "services-group flex-1",
         layout?.style === "row" ? "basis-full" : "basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4",
