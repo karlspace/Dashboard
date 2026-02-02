@@ -215,6 +215,153 @@ pwa:
 
 **Optional:** All Apple-specific settings are optional. If not specified in `pwa:` section, they are omitted from the manifest. Does NOT fall back to root-level settings.
 
+## Shortcuts
+
+Shortcuts provide quick access to key tasks or pages within your web application. When users interact with your PWA's icon (e.g., right-click or long-press), browsers can display these shortcuts in a context menu.
+
+### Basic Shortcuts Configuration
+
+Add shortcuts to provide direct navigation to frequently used features:
+
+```yaml
+pwa:
+  shortcuts:
+    - name: "Today's Tasks"
+      url: "/tasks/today"
+    - name: "New Task"
+      url: "/tasks/new"
+```
+
+### Complete Shortcuts Configuration
+
+Each shortcut supports the following properties:
+
+```yaml
+pwa:
+  shortcuts:
+    - name: "New Task"                          # Required: Display name
+      short_name: "Add"                         # Optional: Short version for limited space
+      description: "Quickly add a new task"     # Optional: Purpose description for accessibility
+      url: "/tasks/new"                         # Required: Target URL (absolute or relative)
+      icons:                                     # Optional: Icons for the shortcut
+        - src: "/images/add.png"
+          sizes: "192x192"
+          type: "image/png"
+    - name: "Today's Tasks"
+      short_name: "Today"
+      description: "View your tasks for today"
+      url: "/tasks/today"
+      icons:
+        - src: "/images/calendar.png"
+          sizes: "192x192"
+          type: "image/png"
+```
+
+### Shortcut Properties
+
+- **name** (required): The display name shown to users in the context menu. Keep it short but descriptive.
+- **url** (required): The URL that opens when the shortcut is activated. Can be absolute (same-origin) or relative to the manifest file.
+- **short_name** (optional): A shorter version of the name for contexts with limited space.
+- **description** (optional): Describes the shortcut's purpose. Exposed to assistive technologies like screen readers.
+- **icons** (optional): Array of icon objects representing the shortcut. Same format as the main `icons` field.
+
+### URL Handling
+
+Shortcuts support both absolute and relative URLs:
+
+```yaml
+pwa:
+  shortcuts:
+    - name: "Dashboard"
+      url: "/"                    # Absolute path from root
+    - name: "Settings"
+      url: "/settings"            # Absolute path
+    - name: "Projects"
+      url: "../projects"          # Relative to manifest location
+```
+
+**Important:** 
+- Absolute URLs must be same-origin with the page linking to the manifest
+- All URLs must be within the PWA's `scope`
+- Relative URLs are resolved against the manifest file's URL
+
+### Best Practices
+
+When creating shortcuts for your PWA, follow these guidelines:
+
+1. **Keep names concise**: Use clear, short names that quickly convey the purpose
+2. **Order by importance**: List shortcuts from most to least important
+3. **Limit quantity**: Add only the most essential shortcuts (3-5 recommended)
+4. **Include icons**: Provide icons in multiple sizes for better visual recognition
+5. **Stay within scope**: Ensure all shortcut URLs are within your PWA's scope
+6. **Test accessibility**: Verify that descriptions are helpful for screen readers
+
+### Browser Support
+
+Shortcuts have **limited availability** across browsers and platforms:
+
+- **Chrome/Edge**: Supported on desktop (Windows, macOS, Linux) and Android
+- **Safari**: Not currently supported on iOS or macOS
+- **Firefox**: Not currently supported
+
+**Note:** The number and presentation of shortcuts varies by platform. Some browsers may:
+- Limit the number of displayed shortcuts
+- Truncate the list based on platform conventions
+- Not display shortcuts at all on unsupported platforms
+
+### Example: Dashboard with Shortcuts
+
+Here's a complete example for a dashboard with common shortcuts:
+
+```yaml
+pwa:
+  # Basic App Info
+  title: "Company Dashboard"
+  shortName: "Dashboard"
+  description: "Central hub for company services"
+  
+  # Display Settings
+  display: standalone
+  scope: /
+  startUrl: /
+  
+  # Shortcuts for quick access
+  shortcuts:
+    - name: "Today's Overview"
+      short_name: "Today"
+      description: "View today's summary and tasks"
+      url: "/"
+      icons:
+        - src: "/images/shortcuts/today.png"
+          sizes: "192x192"
+    - name: "Services"
+      short_name: "Services"
+      description: "Access all company services"
+      url: "/services"
+      icons:
+        - src: "/images/shortcuts/services.png"
+          sizes: "192x192"
+    - name: "Monitoring"
+      short_name: "Monitor"
+      description: "View system monitoring dashboard"
+      url: "/monitoring"
+      icons:
+        - src: "/images/shortcuts/monitor.png"
+          sizes: "192x192"
+```
+
+### Validation
+
+Homepage automatically validates all shortcut configurations:
+
+**Validated Elements:**
+- Required fields (`name` and `url` must be present and non-empty)
+- Icon existence (shortcut icons are validated before inclusion)
+- String types (all text fields must be valid strings)
+- Array structure (shortcuts and icons must be proper arrays)
+
+**Invalid shortcuts** are logged as warnings and excluded from the manifest. The manifest generation continues with valid shortcuts only.
+
 ## Complete Example
 
 Here's a comprehensive PWA configuration example:
@@ -251,6 +398,19 @@ pwa:
   appleMobileWebAppCapable: yes
   appleMobileWebAppStatusBarStyle: black-translucent
   appleMobileWebAppTitle: "Dashboard"
+  
+  # Shortcuts for quick access
+  shortcuts:
+    - name: "Services Overview"
+      short_name: "Services"
+      description: "Quick access to all services"
+      url: "/services"
+    - name: "System Status"
+      short_name: "Status"
+      description: "View system health and status"
+      url: "/status"
+    - name: "Settings"
+      url: "/settings"
 
 # Standard Settings (used as fallbacks and for general theme)
 theme: dark
@@ -268,6 +428,7 @@ Homepage automatically validates all PWA manifest settings:
 - Hex color formats
 - Icon file existence
 - Apple status bar styles
+- Shortcuts (required fields, icons, URLs)
 
 **Invalid values** are logged as warnings and replaced with safe defaults.
 
