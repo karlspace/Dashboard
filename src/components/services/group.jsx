@@ -6,11 +6,7 @@ import { useEffect, useRef } from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
 import { columnMap } from "../../utils/layout/columns";
-
-// Slugify function to create anchor-friendly IDs from group names
-function slugify(name) {
-  return name.toString().replace(/\s+/g, "-").toLowerCase();
-}
+import slugify from "../../utils/slugify";
 
 export default function ServicesGroup({
   group,

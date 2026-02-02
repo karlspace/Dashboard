@@ -4,15 +4,12 @@ import { join } from "path";
 
 import checkAndCopyConfig, { getSettings } from "utils/config/config";
 import createLogger from "utils/logger";
+import slugify from "utils/slugify";
 import themes from "utils/styles/themes";
 
 const logger = createLogger("webmanifest");
 
 // Validation helper functions
-function slugify(name) {
-  return name.toString().replace(/\s+/g, "-").toLowerCase();
-}
-
 function validateDisplay(display) {
   const validValues = ["standalone", "fullscreen", "minimal-ui", "browser"];
   return validValues.includes(display) ? display : "standalone";
