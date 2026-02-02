@@ -290,7 +290,7 @@ function Home({ initialSettings }) {
     // Function to get hash from URL (handles both asPath and window.location.hash)
     const getHashFromURL = () => {
       // First try window.location.hash (more reliable in PWA mode)
-      if (typeof window !== 'undefined' && window.location.hash) {
+      if (window.location.hash) {
         return window.location.hash.substring(1); // Remove the # prefix
       }
       // Fallback to Next.js asPath
@@ -305,12 +305,22 @@ function Home({ initialSettings }) {
     const updateTabFromHash = () => {
       const hash = getHashFromURL();
       
-      if (hash && hash !== "/" && hash !== activeTab) {
-        // Hash exists and is different from current tab, update it
-        setActiveTab(hash);
-      } else if (!hash && !activeTab && tabs.length > 0) {
-        // No hash and no active tab, set to first tab
-        setActiveTab(slugifyAndEncode(tabs[0]));
+      if (hash && hash !== "/") {
+        // Hash exists, set it as the active tab (only if different from current)
+        setActiveTab((current) => {
+          if (current !== hash) {
+            return hash;
+          }
+          return current;
+        });
+      } else if (!hash && tabs.length > 0) {
+        // No hash, set to first tab (only if no active tab)
+        setActiveTab((current) => {
+          if (!current) {
+            return slugifyAndEncode(tabs[0]);
+          }
+          return current;
+        });
       }
     };
 
@@ -322,16 +332,14 @@ function Home({ initialSettings }) {
       updateTabFromHash();
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('hashchange', handleHashChange);
-    }
+    window.addEventListener('hashchange', handleHashChange);
 
     return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('hashchange', handleHashChange);
-      }
+      window.removeEventListener('hashchange', handleHashChange);
     };
-  }, [tabs, asPath, activeTab, setActiveTab]); // Re-run when tabs, asPath, activeTab, or setActiveTab changes
+    // setActiveTab is a stable function from context and doesn't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabs, asPath]); // Re-run when tabs or asPath changes
 
   const servicesAndBookmarksGroups = useMemo(() => {
     const tabGroupFilter = (g) => g && [activeTab, ""].includes(slugifyAndEncode(settings.layout?.[g.name]?.tab));
