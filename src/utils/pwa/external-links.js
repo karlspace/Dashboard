@@ -42,6 +42,24 @@ export function initPWAExternalLinks() {
       return;
     }
 
+    // Check if this is an internal hash link (same-page anchor)
+    try {
+      const linkUrl = new URL(target.href, window.location.href);
+      const currentUrl = new URL(window.location.href);
+      
+      // If it's a hash-only link to the same page, don't intercept it
+      if (linkUrl.origin === currentUrl.origin && 
+          linkUrl.pathname === currentUrl.pathname && 
+          linkUrl.hash && 
+          !linkUrl.search) {
+        // This is an internal hash link, let it work normally
+        return;
+      }
+    } catch (e) {
+      // Invalid URL format, ignore
+      return;
+    }
+
     // Check if the link should open in a new window/tab
     const targetAttr = target.getAttribute('target');
     const shouldOpenExternally = targetAttr === '_blank' || targetAttr === '_new';
