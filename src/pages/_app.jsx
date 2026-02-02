@@ -73,8 +73,7 @@ const tailwindSafelist = [
 function MyApp({ Component, pageProps }) {
   // Initialize PWA external links handler to fix Android PWA link behavior
   useEffect(() => {
-    const cleanup = initPWAExternalLinks();
-    return cleanup;
+    return initPWAExternalLinks();
   }, []);
 
   return (
