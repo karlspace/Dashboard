@@ -6,6 +6,11 @@ import ResolvedIcon from "components/resolvedicon";
 import { useEffect, useRef } from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
+// Slugify function to create anchor-friendly IDs from group names
+function slugify(name) {
+  return name.toString().replace(/\s+/g, "-").toLowerCase();
+}
+
 export default function BookmarksGroup({
   bookmarks,
   layout,
@@ -23,6 +28,7 @@ export default function BookmarksGroup({
   return (
     <div
       key={bookmarks.name}
+      id={slugify(bookmarks.name)}
       className={classNames(
         "bookmark-group flex-1 overflow-hidden",
         layout?.style === "row" ? "basis-full" : "basis-full md:basis-1/4 lg:basis-1/5 xl:basis-1/6",

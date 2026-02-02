@@ -232,6 +232,43 @@ pwa:
       url: "/tasks/new"
 ```
 
+### Shortcuts to Layout Sections
+
+You can create shortcuts that link directly to sections defined in your `layout:` configuration using the `target` field. This is especially useful for creating quick access to specific dashboard sections:
+
+```yaml
+# In your settings.yaml
+layout:
+  CRM:
+    icon: mdi-handshake-#FF7A59
+    style: row
+    columns: 5
+  
+  ERP:
+    icon: mdi-domain-#F00AD0
+    style: row
+    columns: 5
+
+pwa:
+  shortcuts:
+    - name: "CRM"
+      short_name: "CRM"
+      description: "Schnellzugriff auf CRM-Anwendungen"
+      target: "CRM"                          # References the layout section name
+    - name: "ERP Systems"
+      short_name: "ERP"
+      description: "Access ERP applications"
+      target: "ERP"                          # References the layout section name
+```
+
+**How it works:**
+- The `target` field references a section name from your `layout:` configuration
+- Homepage automatically generates the correct anchor URL (e.g., `/#crm`, `/#erp`)
+- All layout sections automatically get anchor IDs based on their sanitized names (lowercase, spaces replaced with dashes)
+- If the target section doesn't exist in your layout, the shortcut will be skipped with a warning
+
+**Note:** Use either `url` OR `target` for each shortcut, not both. The `target` field takes precedence if both are specified.
+
 ### Complete Shortcuts Configuration
 
 Each shortcut supports the following properties:
@@ -242,7 +279,7 @@ pwa:
     - name: "New Task"                          # Required: Display name
       short_name: "Add"                         # Optional: Short version for limited space
       description: "Quickly add a new task"     # Optional: Purpose description for accessibility
-      url: "/tasks/new"                         # Required: Target URL (absolute or relative)
+      url: "/tasks/new"                         # Required (or use 'target'): Target URL
       icons:                                     # Optional: Icons for the shortcut
         - src: "/images/add.png"
           sizes: "192x192"
@@ -260,7 +297,8 @@ pwa:
 ### Shortcut Properties
 
 - **name** (required): The display name shown to users in the context menu. Keep it short but descriptive.
-- **url** (required): The URL that opens when the shortcut is activated. Can be absolute (same-origin) or relative to the manifest file.
+- **url** (required unless using `target`): The URL that opens when the shortcut is activated. Can be absolute (same-origin) or relative to the manifest file.
+- **target** (required unless using `url`): The name of a layout section to link to. Automatically generates an anchor URL (e.g., `/#section-name`).
 - **short_name** (optional): A shorter version of the name for contexts with limited space.
 - **description** (optional): Describes the shortcut's purpose. Exposed to assistive technologies like screen readers.
 - **icons** (optional): Array of icon objects representing the shortcut. Same format as the main `icons` field.
@@ -278,12 +316,15 @@ pwa:
       url: "/settings"            # Absolute path
     - name: "Projects"
       url: "../projects"          # Relative to manifest location
+    - name: "CRM Section"
+      target: "CRM"               # Reference to layout section
 ```
 
 **Important:** 
 - Absolute URLs must be same-origin with the page linking to the manifest
 - Shortcut URLs should be within the PWA's `scope` for proper functionality (not enforced during validation)
 - Relative URLs are resolved against the manifest file's URL
+- When using `target`, ensure the referenced section exists in your `layout:` configuration
 
 ### Best Practices
 
@@ -336,19 +377,19 @@ pwa:
       icons:
         - src: "/images/shortcuts/today.png"
           sizes: "192x192"
-    - name: "Services"
-      short_name: "Services"
-      description: "Access all company services"
-      url: "/services"
+    - name: "CRM Section"
+      short_name: "CRM"
+      description: "Access CRM applications"
+      target: "CRM"                 # Reference to layout section
       icons:
-        - src: "/images/shortcuts/services.png"
+        - src: "/images/shortcuts/crm.png"
           sizes: "192x192"
-    - name: "Monitoring"
-      short_name: "Monitor"
-      description: "View system monitoring dashboard"
-      url: "/monitoring"
+    - name: "ERP Section"
+      short_name: "ERP"
+      description: "Access ERP systems"
+      target: "ERP"                 # Reference to layout section
       icons:
-        - src: "/images/shortcuts/monitor.png"
+        - src: "/images/shortcuts/erp.png"
           sizes: "192x192"
 ```
 
@@ -357,7 +398,8 @@ pwa:
 Homepage automatically validates all shortcut configurations:
 
 **Validated Elements:**
-- Required fields (`name` and `url` must be present and non-empty)
+- Required fields (`name` and either `url` or `target` must be present and non-empty)
+- Layout section existence (when using `target`, the section must exist in `layout:`)
 - Icon existence (shortcut icons are validated before inclusion)
 - String types (all text fields must be valid strings)
 - Array structure (shortcuts and icons must be proper arrays)
@@ -403,16 +445,28 @@ pwa:
   
   # Shortcuts for quick access
   shortcuts:
-    - name: "Services Overview"
-      short_name: "Services"
-      description: "Quick access to all services"
-      url: "/services"
-    - name: "System Status"
-      short_name: "Status"
-      description: "View system health and status"
-      url: "/status"
+    - name: "CRM Applications"
+      short_name: "CRM"
+      description: "Quick access to CRM section"
+      target: "CRM"                          # Reference to layout section
+    - name: "ERP Systems"
+      short_name: "ERP"
+      description: "Access ERP applications"
+      target: "ERP"                          # Reference to layout section
     - name: "Settings"
       url: "/settings"
+
+# Layout Configuration (defines sections that can be referenced by shortcuts)
+layout:
+  CRM:
+    icon: mdi-handshake-#FF7A59
+    style: row
+    columns: 5
+  
+  ERP:
+    icon: mdi-domain-#F00AD0
+    style: row
+    columns: 5
 
 # Standard Settings (used as fallbacks and for general theme)
 theme: dark

@@ -9,6 +9,10 @@ import themes from "utils/styles/themes";
 const logger = createLogger("webmanifest");
 
 // Validation helper functions
+function slugify(name) {
+  return name.toString().replace(/\s+/g, "-").toLowerCase();
+}
+
 function validateDisplay(display) {
   const validValues = ["standalone", "fullscreen", "minimal-ui", "browser"];
   return validValues.includes(display) ? display : "standalone";
@@ -33,7 +37,7 @@ function validateLanguage(lang) {
   return langRegex.test(lang) ? lang : "en";
 }
 
-function validateShortcuts(shortcuts) {
+function validateShortcuts(shortcuts, settings) {
   if (!shortcuts || !Array.isArray(shortcuts)) {
     return [];
   }
@@ -49,14 +53,31 @@ function validateShortcuts(shortcuts) {
       continue;
     }
     
-    if (!shortcut.url || typeof shortcut.url !== "string" || shortcut.url.trim().length === 0) {
-      logger.warn(`Shortcut "${shortcut.name}" missing required "url" field, skipping`);
+    // Check for either 'url' or 'target' field
+    let urlValue;
+    if (shortcut.target && typeof shortcut.target === "string" && shortcut.target.trim().length > 0) {
+      // Target field specified - generate URL from layout section name
+      const targetName = shortcut.target.trim();
+      
+      // Check if target exists in layout
+      if (settings?.layout && settings.layout[targetName]) {
+        urlValue = `/#${slugify(targetName)}`;
+        logger.debug(`Shortcut "${shortcut.name}" target "${targetName}" resolved to URL: ${urlValue}`);
+      } else {
+        logger.warn(`Shortcut "${shortcut.name}" target "${targetName}" not found in layout, skipping`);
+        continue;
+      }
+    } else if (shortcut.url && typeof shortcut.url === "string" && shortcut.url.trim().length > 0) {
+      // URL field specified - use as is
+      urlValue = shortcut.url.trim();
+    } else {
+      logger.warn(`Shortcut "${shortcut.name}" missing required "url" or "target" field, skipping`);
       continue;
     }
     
     const validShortcut = {
       name: shortcut.name.trim(),
-      url: shortcut.url.trim(),
+      url: urlValue,
     };
     
     // Add optional short_name if provided
@@ -187,7 +208,7 @@ export async function getServerSideProps({ res }) {
     };
     
     // Add shortcuts if provided in root settings
-    const defaultShortcuts = validateShortcuts(settings.shortcuts);
+    const defaultShortcuts = validateShortcuts(settings.shortcuts, settings);
     if (defaultShortcuts.length > 0) {
       defaultManifest.shortcuts = defaultShortcuts;
       logger.debug(`Added ${defaultShortcuts.length} shortcuts to default manifest`);
@@ -444,7 +465,7 @@ export async function getServerSideProps({ res }) {
   // Add shortcuts if provided - only from pwa section (PWA-specific)
   const shortcutsConfig = getPwaOnlyValue('shortcuts', null);
   if (shortcutsConfig) {
-    const validatedShortcuts = validateShortcuts(shortcutsConfig);
+    const validatedShortcuts = validateShortcuts(shortcutsConfig, settings);
     if (validatedShortcuts.length > 0) {
       manifest.shortcuts = validatedShortcuts;
       logger.debug(`Added ${validatedShortcuts.length} shortcuts to PWA manifest`);
