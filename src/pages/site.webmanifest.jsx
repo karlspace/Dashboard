@@ -33,7 +33,7 @@ function validateLanguage(lang) {
   return langRegex.test(lang) ? lang : "en";
 }
 
-function validateShortcuts(shortcuts, scope) {
+function validateShortcuts(shortcuts) {
   if (!shortcuts || !Array.isArray(shortcuts)) {
     return [];
   }
@@ -187,7 +187,7 @@ export async function getServerSideProps({ res }) {
     };
     
     // Add shortcuts if provided in root settings
-    const defaultShortcuts = validateShortcuts(settings.shortcuts, defaultManifest.scope);
+    const defaultShortcuts = validateShortcuts(settings.shortcuts);
     if (defaultShortcuts.length > 0) {
       defaultManifest.shortcuts = defaultShortcuts;
       logger.debug(`Added ${defaultShortcuts.length} shortcuts to default manifest`);
@@ -444,7 +444,7 @@ export async function getServerSideProps({ res }) {
   // Add shortcuts if provided - only from pwa section (PWA-specific)
   const shortcutsConfig = getPwaOnlyValue('shortcuts', null);
   if (shortcutsConfig) {
-    const validatedShortcuts = validateShortcuts(shortcutsConfig, manifest.scope);
+    const validatedShortcuts = validateShortcuts(shortcutsConfig);
     if (validatedShortcuts.length > 0) {
       manifest.shortcuts = validatedShortcuts;
       logger.debug(`Added ${validatedShortcuts.length} shortcuts to PWA manifest`);

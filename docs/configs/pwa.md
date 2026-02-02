@@ -282,7 +282,7 @@ pwa:
 
 **Important:** 
 - Absolute URLs must be same-origin with the page linking to the manifest
-- All URLs must be within the PWA's `scope`
+- Shortcut URLs should be within the PWA's `scope` for proper functionality (not enforced during validation)
 - Relative URLs are resolved against the manifest file's URL
 
 ### Best Practices
@@ -298,7 +298,7 @@ When creating shortcuts for your PWA, follow these guidelines:
 
 ### Browser Support
 
-Shortcuts have **limited availability** across browsers and platforms:
+Shortcuts have **limited availability** across browsers and platforms. Browser support information is current as of early 2026.
 
 - **Chrome/Edge**: Supported on desktop (Windows, macOS, Linux) and Android
 - **Safari**: Not currently supported on iOS or macOS
@@ -308,6 +308,8 @@ Shortcuts have **limited availability** across browsers and platforms:
 - Limit the number of displayed shortcuts
 - Truncate the list based on platform conventions
 - Not display shortcuts at all on unsupported platforms
+
+For the most current browser compatibility information, refer to the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/Manifest/shortcuts#browser_compatibility).
 
 ### Example: Dashboard with Shortcuts
 
