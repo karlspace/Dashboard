@@ -33,6 +33,90 @@ function validateLanguage(lang) {
   return langRegex.test(lang) ? lang : "en";
 }
 
+function validateShortcuts(shortcuts) {
+  if (!shortcuts || !Array.isArray(shortcuts)) {
+    return [];
+  }
+
+  const validShortcuts = [];
+  
+  for (let i = 0; i < shortcuts.length; i++) {
+    const shortcut = shortcuts[i];
+    
+    // Validate required fields
+    if (!shortcut.name || typeof shortcut.name !== "string" || shortcut.name.trim().length === 0) {
+      logger.warn(`Shortcut at index ${i} missing required "name" field, skipping`);
+      continue;
+    }
+    
+    if (!shortcut.url || typeof shortcut.url !== "string" || shortcut.url.trim().length === 0) {
+      logger.warn(`Shortcut "${shortcut.name}" missing required "url" field, skipping`);
+      continue;
+    }
+    
+    const validShortcut = {
+      name: shortcut.name.trim(),
+      url: shortcut.url.trim(),
+    };
+    
+    // Add optional short_name if provided
+    if (shortcut.short_name && typeof shortcut.short_name === "string" && shortcut.short_name.trim().length > 0) {
+      validShortcut.short_name = shortcut.short_name.trim();
+    }
+    
+    // Add optional description if provided
+    if (shortcut.description && typeof shortcut.description === "string" && shortcut.description.trim().length > 0) {
+      validShortcut.description = shortcut.description.trim();
+    }
+    
+    // Add optional icons if provided
+    if (shortcut.icons && Array.isArray(shortcut.icons) && shortcut.icons.length > 0) {
+      const validIcons = shortcut.icons.filter(icon => {
+        if (!icon.src || typeof icon.src !== "string" || icon.src.trim().length === 0) {
+          logger.warn(`Shortcut "${shortcut.name}" has icon with missing "src", skipping icon`);
+          return false;
+        }
+        if (!icon.sizes || typeof icon.sizes !== "string" || icon.sizes.trim().length === 0) {
+          logger.warn(`Shortcut "${shortcut.name}" has icon with missing "sizes", skipping icon`);
+          return false;
+        }
+        
+        // Check if icon exists
+        const exists = checkIconExists(icon.src);
+        if (!exists) {
+          logger.warn(`Shortcut "${shortcut.name}" icon not found: ${icon.src}, skipping icon`);
+          return false;
+        }
+        
+        return true;
+      }).map(icon => {
+        const validIcon = {
+          src: icon.src.trim(),
+          sizes: icon.sizes.trim(),
+        };
+        
+        if (icon.type && typeof icon.type === "string" && icon.type.trim().length > 0) {
+          validIcon.type = icon.type.trim();
+        }
+        
+        if (icon.purpose && typeof icon.purpose === "string" && icon.purpose.trim().length > 0) {
+          validIcon.purpose = icon.purpose.trim();
+        }
+        
+        return validIcon;
+      });
+      
+      if (validIcons.length > 0) {
+        validShortcut.icons = validIcons;
+      }
+    }
+    
+    validShortcuts.push(validShortcut);
+  }
+  
+  return validShortcuts;
+}
+
 function checkIconExists(iconPath) {
   // Remove query params for file check
   const cleanPath = iconPath.split("?")[0];
@@ -101,6 +185,13 @@ export async function getServerSideProps({ res }) {
       theme_color: themeColor,
       icons: defaultIcons,
     };
+    
+    // Add shortcuts if provided in root settings
+    const defaultShortcuts = validateShortcuts(settings.shortcuts);
+    if (defaultShortcuts.length > 0) {
+      defaultManifest.shortcuts = defaultShortcuts;
+      logger.debug(`Added ${defaultShortcuts.length} shortcuts to default manifest`);
+    }
     
     res.setHeader("Content-Type", "application/manifest+json");
     res.setHeader("Cache-Control", "no-cache, must-revalidate");
@@ -347,6 +438,18 @@ export async function getServerSideProps({ res }) {
       manifest["apple-mobile-web-app-title"] = appleMobileWebAppTitle;
     } else {
       logger.warn("Invalid appleMobileWebAppTitle, must be a non-empty string");
+    }
+  }
+
+  // Add shortcuts if provided - only from pwa section (PWA-specific)
+  const shortcutsConfig = getPwaOnlyValue('shortcuts', null);
+  if (shortcutsConfig) {
+    const validatedShortcuts = validateShortcuts(shortcutsConfig);
+    if (validatedShortcuts.length > 0) {
+      manifest.shortcuts = validatedShortcuts;
+      logger.debug(`Added ${validatedShortcuts.length} shortcuts to PWA manifest`);
+    } else if (Array.isArray(shortcutsConfig) && shortcutsConfig.length > 0) {
+      logger.warn("No valid shortcuts found in configuration");
     }
   }
 
