@@ -291,7 +291,7 @@ function Home({ initialSettings }) {
     const hash = hashIndex !== -1 ? asPath.substring(hashIndex + 1) : "";
     
     if (hash && hash !== "/") {
-      setActiveTab(hash);
+      setActiveTab((current) => current !== hash ? hash : current);
     } else {
       setActiveTab((current) => {
         if (!current) {

@@ -57,9 +57,18 @@ export default async function handler(req, res) {
 
     // Load services from all sources
     const [configServices, dockerServices, kubernetesServices] = await Promise.all([
-      servicesFromConfig().catch(() => []),
-      servicesFromDocker().catch(() => []),
-      servicesFromKubernetes().catch(() => []),
+      servicesFromConfig().catch((err) => {
+        logger.error(`Failed to load services from config: ${err.message}`);
+        return [];
+      }),
+      servicesFromDocker().catch((err) => {
+        logger.error(`Failed to load services from Docker: ${err.message}`);
+        return [];
+      }),
+      servicesFromKubernetes().catch((err) => {
+        logger.error(`Failed to load services from Kubernetes: ${err.message}`);
+        return [];
+      }),
     ]);
 
     // Merge and clean all service groups
