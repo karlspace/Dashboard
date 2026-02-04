@@ -53,13 +53,14 @@ function validateShortcuts(shortcuts, settings) {
     // Check for either 'url' or 'target' field
     let urlValue;
     if (shortcut.target && typeof shortcut.target === "string" && shortcut.target.trim().length > 0) {
-      // Target field specified - generate URL from layout section name
+      // Target field specified - generate redirect API URL
       const targetName = shortcut.target.trim();
       
       // Check if target exists in layout
       if (settings?.layout && settings.layout[targetName]) {
-        urlValue = `/#${slugify(targetName)}`;
-        logger.debug(`Shortcut "${shortcut.name}" target "${targetName}" resolved to URL: ${urlValue}`);
+        // Use redirect API instead of anchor link
+        urlValue = `/api/shortcut/${slugify(targetName)}`;
+        logger.debug(`Shortcut "${shortcut.name}" target "${targetName}" resolved to redirect URL: ${urlValue}`);
       } else {
         logger.warn(`Shortcut "${shortcut.name}" target "${targetName}" not found in layout, skipping`);
         continue;
