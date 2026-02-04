@@ -285,24 +285,12 @@ function Home({ initialSettings }) {
     [settings.layout],
   );
 
-  // Initialize tab from URL hash on mount
   useEffect(() => {
-    const hashIndex = asPath.indexOf("#");
-    const hash = hashIndex !== -1 ? asPath.substring(hashIndex + 1) : "";
-    
-    if (hash && hash !== "/") {
-      setActiveTab((current) => current !== hash ? hash : current);
-    } else {
-      setActiveTab((current) => {
-        if (!current) {
-          return slugifyAndEncode(tabs[0]);
-        }
-        return current;
-      });
+    if (!activeTab) {
+      const initialTab = asPath.substring(asPath.indexOf("#") + 1);
+      setActiveTab(initialTab === "/" ? slugifyAndEncode(tabs["0"]) : initialTab);
     }
-    // setActiveTab is a stable function from context and doesn't need to be in dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabs, asPath]); // Re-run when tabs or asPath changes
+  });
 
   const servicesAndBookmarksGroups = useMemo(() => {
     const tabGroupFilter = (g) => g && [activeTab, ""].includes(slugifyAndEncode(settings.layout?.[g.name]?.tab));
