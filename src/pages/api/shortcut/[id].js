@@ -1,9 +1,70 @@
 import checkAndCopyConfig, { getSettings } from "utils/config/config";
-import { servicesFromConfig, servicesFromDocker, servicesFromKubernetes, findGroupByName, cleanServiceGroups } from "utils/config/service-helpers";
+import { servicesFromConfig, servicesFromDocker, servicesFromKubernetes, cleanServiceGroups } from "utils/config/service-helpers";
 import createLogger from "utils/logger";
 import slugify from "utils/slugify";
 
 const logger = createLogger("shortcut-redirect");
+
+// Helper function to validate and redirect to a URL
+function validateAndRedirect(url, res, loggerInstance) {
+  try {
+    // Check if it's a relative URL or absolute URL
+    if (url.startsWith("/") || url.startsWith("#")) {
+      // Relative URL - safe to redirect
+      return res.redirect(302, url);
+    }
+    
+    // For absolute URLs, validate that they are http/https
+    const urlObj = new URL(url);
+    if (urlObj.protocol === "http:" || urlObj.protocol === "https:") {
+      return res.redirect(302, url);
+    }
+    
+    // Invalid protocol
+    loggerInstance.warn(`Invalid protocol in URL: ${url}`);
+    return res.status(400).json({ error: "Invalid URL protocol" });
+  } catch (error) {
+    loggerInstance.error(`Error parsing URL: ${error.message}`);
+    return res.status(400).json({ error: "Invalid URL" });
+  }
+}
+
+// Helper function to search for a service by name across all groups
+function findServiceByName(allServices, serviceName) {
+  for (const group of allServices) {
+    // Check regular services
+    if (group.services && Array.isArray(group.services)) {
+      for (const service of group.services) {
+        if (service.name === serviceName && service.href && service.href !== "#") {
+          return {
+            url: service.href,
+            serviceName: service.name,
+            groupName: group.name,
+          };
+        }
+      }
+    }
+    
+    // Check nested groups
+    if (group.groups && Array.isArray(group.groups)) {
+      for (const nestedGroup of group.groups) {
+        if (nestedGroup.services && Array.isArray(nestedGroup.services)) {
+          for (const service of nestedGroup.services) {
+            if (service.name === serviceName && service.href && service.href !== "#") {
+              return {
+                url: service.href,
+                serviceName: service.name,
+                groupName: nestedGroup.name,
+              };
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return null;
+}
 
 export default async function handler(req, res) {
   const { id } = req.query;
@@ -28,7 +89,9 @@ export default async function handler(req, res) {
     // Get shortcuts from PWA config or root settings
     const shortcuts = settings.pwa?.shortcuts || settings.shortcuts || [];
 
-    // Find the shortcut by matching the slugified target/url name
+    // Find the shortcut by matching the slugified name
+    // For 'target' shortcuts: ID is slugified target name
+    // For 'url' shortcuts: ID is slugified shortcut name
     let targetShortcut = null;
     let targetServiceName = null;
 
@@ -61,28 +124,7 @@ export default async function handler(req, res) {
     if (targetShortcut.url && !targetShortcut.target) {
       const directUrl = targetShortcut.url;
       logger.info(`Redirecting shortcut "${id}" to direct URL: ${directUrl}`);
-      
-      // Validate the URL before redirecting
-      try {
-        // Check if it's a relative URL or absolute URL
-        if (directUrl.startsWith("/") || directUrl.startsWith("#")) {
-          // Relative URL - safe to redirect
-          return res.redirect(302, directUrl);
-        }
-        
-        // For absolute URLs, validate that they are http/https
-        const url = new URL(directUrl);
-        if (url.protocol === "http:" || url.protocol === "https:") {
-          return res.redirect(302, directUrl);
-        }
-        
-        // Invalid protocol
-        logger.warn(`Invalid protocol in direct URL: ${directUrl}`);
-        return res.status(400).json({ error: "Invalid URL protocol" });
-      } catch (error) {
-        logger.error(`Error parsing direct URL: ${error.message}`);
-        return res.status(400).json({ error: "Invalid URL" });
-      }
+      return validateAndRedirect(directUrl, res, logger);
     }
 
     // Target field specified - find the service by name
@@ -110,76 +152,18 @@ export default async function handler(req, res) {
     // Merge and clean all service groups
     const allServices = cleanServiceGroups([...configServices, ...dockerServices, ...kubernetesServices]);
 
-    // Search for the service by name across all groups
-    let targetUrl = null;
-    let foundServiceName = null;
-    let foundGroupName = null;
+    // Search for the service by name
+    const foundService = findServiceByName(allServices, targetServiceName);
 
-    for (const group of allServices) {
-      if (group.services && Array.isArray(group.services)) {
-        for (const service of group.services) {
-          if (service.name === targetServiceName) {
-            if (service.href && service.href !== "#") {
-              targetUrl = service.href;
-              foundServiceName = service.name;
-              foundGroupName = group.name;
-              logger.info(`Found service "${foundServiceName}" in group "${foundGroupName}" with URL: ${targetUrl}`);
-              break;
-            }
-          }
-        }
-        if (targetUrl) break;
-      }
-      
-      // Also check nested groups
-      if (group.groups && Array.isArray(group.groups)) {
-        for (const nestedGroup of group.groups) {
-          if (nestedGroup.services && Array.isArray(nestedGroup.services)) {
-            for (const service of nestedGroup.services) {
-              if (service.name === targetServiceName) {
-                if (service.href && service.href !== "#") {
-                  targetUrl = service.href;
-                  foundServiceName = service.name;
-                  foundGroupName = nestedGroup.name;
-                  logger.info(`Found service "${foundServiceName}" in nested group "${foundGroupName}" with URL: ${targetUrl}`);
-                  break;
-                }
-              }
-            }
-            if (targetUrl) break;
-          }
-        }
-        if (targetUrl) break;
-      }
-    }
-
-    // If no service found with that name
-    if (!targetUrl) {
+    if (!foundService) {
       logger.warn(`Service "${targetServiceName}" not found or has no URL`);
       return res.status(404).json({ error: "Service not found" });
     }
 
-    // Validate the URL before redirecting
-    try {
-      // Check if it's a relative URL or absolute URL
-      if (targetUrl.startsWith("/") || targetUrl.startsWith("#")) {
-        // Relative URL - safe to redirect
-        return res.redirect(302, targetUrl);
-      }
-      
-      // For absolute URLs, validate that they are http/https
-      const url = new URL(targetUrl);
-      if (url.protocol === "http:" || url.protocol === "https:") {
-        return res.redirect(302, targetUrl);
-      }
-      
-      // Invalid protocol
-      logger.warn(`Invalid protocol in URL: ${targetUrl}`);
-      return res.status(400).json({ error: "Invalid URL protocol" });
-    } catch (error) {
-      logger.error(`Error parsing URL: ${error.message}`);
-      return res.status(400).json({ error: "Invalid URL" });
-    }
+    logger.info(`Found service "${foundService.serviceName}" in group "${foundService.groupName}" with URL: ${foundService.url}`);
+
+    // Validate and redirect to the service URL
+    return validateAndRedirect(foundService.url, res, logger);
   } catch (error) {
     logger.error(`Error processing shortcut redirect: ${error.message}`);
     return res.status(500).json({ error: "Internal server error" });
