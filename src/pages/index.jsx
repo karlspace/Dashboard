@@ -285,61 +285,12 @@ function Home({ initialSettings }) {
     [settings.layout],
   );
 
-  // Initialize tab from URL hash on mount and handle hash changes
   useEffect(() => {
-    // Function to get hash from URL (handles both asPath and window.location.hash)
-    const getHashFromURL = () => {
-      // First try window.location.hash (more reliable in PWA mode)
-      if (window.location.hash) {
-        return window.location.hash.substring(1); // Remove the # prefix
-      }
-      // Fallback to Next.js asPath
-      const hashIndex = asPath.indexOf("#");
-      if (hashIndex !== -1) {
-        return asPath.substring(hashIndex + 1);
-      }
-      return "";
-    };
-
-    // Function to update the active tab based on the current hash
-    const updateTabFromHash = () => {
-      const hash = getHashFromURL();
-      
-      if (hash && hash !== "/") {
-        // Hash exists, set it as the active tab (only if different from current)
-        setActiveTab((current) => {
-          if (current !== hash) {
-            return hash;
-          }
-          return current;
-        });
-      } else if (!hash && tabs.length > 0) {
-        // No hash, set to first tab (only if no active tab)
-        setActiveTab((current) => {
-          if (!current) {
-            return slugifyAndEncode(tabs[0]);
-          }
-          return current;
-        });
-      }
-    };
-
-    // Set initial tab on mount
-    updateTabFromHash();
-
-    // Listen for hash changes (important for PWA shortcuts)
-    const handleHashChange = () => {
-      updateTabFromHash();
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-    // setActiveTab is a stable function from context and doesn't need to be in dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabs, asPath]); // Re-run when tabs or asPath changes
+    if (!activeTab) {
+      const initialTab = asPath.substring(asPath.indexOf("#") + 1);
+      setActiveTab(initialTab === "/" ? slugifyAndEncode(tabs["0"]) : initialTab);
+    }
+  });
 
   const servicesAndBookmarksGroups = useMemo(() => {
     const tabGroupFilter = (g) => g && [activeTab, ""].includes(slugifyAndEncode(settings.layout?.[g.name]?.tab));
