@@ -53,20 +53,17 @@ function validateShortcuts(shortcuts, settings) {
     // Check for either 'url' or 'target' field
     let urlValue;
     if (shortcut.target && typeof shortcut.target === "string" && shortcut.target.trim().length > 0) {
-      // Target field specified - generate URL from layout section name
+      // Target field specified - service name that will be resolved by redirect API
       const targetName = shortcut.target.trim();
-      
-      // Check if target exists in layout
-      if (settings?.layout && settings.layout[targetName]) {
-        urlValue = `/#${slugify(targetName)}`;
-        logger.debug(`Shortcut "${shortcut.name}" target "${targetName}" resolved to URL: ${urlValue}`);
-      } else {
-        logger.warn(`Shortcut "${shortcut.name}" target "${targetName}" not found in layout, skipping`);
-        continue;
-      }
+      // Use redirect API to resolve service name to URL
+      urlValue = `/api/shortcut/${slugify(targetName)}`;
+      logger.debug(`Shortcut "${shortcut.name}" target "${targetName}" resolved to redirect URL: ${urlValue}`);
     } else if (shortcut.url && typeof shortcut.url === "string" && shortcut.url.trim().length > 0) {
-      // URL field specified - use as is
-      urlValue = shortcut.url.trim();
+      // URL field specified - use redirect API to handle the URL
+      const shortcutName = shortcut.name.trim();
+      // Use redirect API to redirect to the configured URL
+      urlValue = `/api/shortcut/${slugify(shortcutName)}`;
+      logger.debug(`Shortcut "${shortcut.name}" URL will be resolved via redirect URL: ${urlValue}`);
     } else {
       logger.warn(`Shortcut "${shortcut.name}" missing required "url" or "target" field, skipping`);
       continue;

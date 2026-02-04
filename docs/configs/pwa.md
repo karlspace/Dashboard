@@ -232,40 +232,37 @@ pwa:
       url: "/tasks/new"
 ```
 
-### Shortcuts to Layout Sections
+### Shortcuts to Dashboard Services
 
-You can create shortcuts that link directly to sections defined in your `layout:` configuration using the `target` field. This is especially useful for creating quick access to specific dashboard sections:
+You can create shortcuts that link directly to services defined in your dashboard using the `target` field. This provides quick access to specific services:
 
 ```yaml
-# In your settings.yaml
-layout:
-  CRM:
-    icon: mdi-handshake-#FF7A59
-    style: row
-    columns: 5
-  
-  ERP:
-    icon: mdi-domain-#F00AD0
-    style: row
-    columns: 5
+# In your services.yaml
+- Productivity:
+    - Nextcloud:
+        href: https://nextcloud.example.com
+        description: Cloud Storage
+    - GitLab:
+        href: https://gitlab.example.com
+        description: Version Control
 
 pwa:
   shortcuts:
-    - name: "CRM"
-      short_name: "CRM"
-      description: "Schnellzugriff auf CRM-Anwendungen"
-      target: "CRM"                          # References the layout section name
-    - name: "ERP Systems"
-      short_name: "ERP"
-      description: "Access ERP applications"
-      target: "ERP"                          # References the layout section name
+    - name: "Nextcloud"
+      short_name: "Cloud"
+      description: "Quick access to Nextcloud"
+      target: "Nextcloud"                    # References the service name
+    - name: "GitLab"
+      short_name: "Git"
+      description: "Access version control"
+      target: "GitLab"                       # References the service name
 ```
 
 **How it works:**
-- The `target` field references a section name from your `layout:` configuration
-- Homepage automatically generates the correct anchor URL (e.g., `/#crm`, `/#erp`)
-- All layout sections automatically get anchor IDs based on their sanitized names (lowercase, spaces replaced with dashes)
-- If the target section doesn't exist in your layout, the shortcut will be skipped with a warning
+- The `target` field references a service name from your services configuration
+- Homepage automatically finds the service and redirects to its URL
+- Services are searched across all groups (including Docker and Kubernetes services)
+- If the target service doesn't exist or has no URL, the shortcut will fail with a 404 error
 
 **Note:** Use either `url` OR `target` for each shortcut, not both. The `target` field takes precedence if both are specified.
 
@@ -298,33 +295,34 @@ pwa:
 
 - **name** (required): The display name shown to users in the context menu. Keep it short but descriptive.
 - **url** (required unless using `target`): The URL that opens when the shortcut is activated. Can be absolute (same-origin) or relative to the manifest file.
-- **target** (required unless using `url`): The name of a layout section to link to. Automatically generates an anchor URL (e.g., `/#section-name`).
+- **target** (required unless using `url`): The name of a service to link to. The service must exist in your services configuration with a valid URL.
 - **short_name** (optional): A shorter version of the name for contexts with limited space.
 - **description** (optional): Describes the shortcut's purpose. Exposed to assistive technologies like screen readers.
 - **icons** (optional): Array of icon objects representing the shortcut. Same format as the main `icons` field.
 
 ### URL Handling
 
-Shortcuts support both absolute and relative URLs:
+Shortcuts support both service references and direct URLs:
 
 ```yaml
 pwa:
   shortcuts:
+    - name: "Nextcloud"
+      target: "Nextcloud"         # Reference to service name
+    - name: "GitHub"
+      url: "https://github.com"   # Direct external URL
     - name: "Dashboard"
       url: "/"                    # Absolute path from root
     - name: "Settings"
-      url: "/settings"            # Absolute path
-    - name: "Projects"
-      url: "../projects"          # Relative to manifest location
-    - name: "CRM Section"
-      target: "CRM"               # Reference to layout section
+      url: "/settings"            # Absolute internal path
 ```
 
 **Important:** 
-- Absolute URLs must be same-origin with the page linking to the manifest
-- Shortcut URLs should be within the PWA's `scope` for proper functionality (not enforced during validation)
-- Relative URLs are resolved against the manifest file's URL
-- When using `target`, ensure the referenced section exists in your `layout:` configuration
+- When using `target`, the service name must match exactly with a service in your configuration
+- Services are searched across all groups (services.yaml, Docker, Kubernetes)
+- Direct URLs can be external (https://example.com) or internal (/path)
+- External URLs must use http:// or https:// protocols for security
+- When using `target`, ensure the service exists and has a valid `href` field
 
 ### Best Practices
 
@@ -357,6 +355,16 @@ For the most current browser compatibility information, refer to the [MDN Web Do
 Here's a complete example for a dashboard with common shortcuts:
 
 ```yaml
+# In services.yaml
+- Productivity:
+    - Nextcloud:
+        href: https://nextcloud.example.com
+        description: Cloud Storage
+    - GitLab:
+        href: https://gitlab.example.com
+        description: Version Control
+
+# In settings.yaml
 pwa:
   # Basic App Info
   title: "Company Dashboard"
@@ -370,26 +378,33 @@ pwa:
   
   # Shortcuts for quick access
   shortcuts:
-    - name: "Today's Overview"
-      short_name: "Today"
-      description: "View today's summary and tasks"
+    - name: "Dashboard Home"
+      short_name: "Home"
+      description: "View the main dashboard"
       url: "/"
       icons:
-        - src: "/images/shortcuts/today.png"
+        - src: "/images/shortcuts/home.png"
           sizes: "192x192"
-    - name: "CRM Section"
-      short_name: "CRM"
-      description: "Access CRM applications"
-      target: "CRM"                 # Reference to layout section
+    - name: "Nextcloud"
+      short_name: "Cloud"
+      description: "Access cloud storage"
+      target: "Nextcloud"           # Reference to service name
       icons:
-        - src: "/images/shortcuts/crm.png"
+        - src: "/images/shortcuts/nextcloud.png"
           sizes: "192x192"
-    - name: "ERP Section"
-      short_name: "ERP"
-      description: "Access ERP systems"
-      target: "ERP"                 # Reference to layout section
+    - name: "GitLab"
+      short_name: "Git"
+      description: "Access version control"
+      target: "GitLab"              # Reference to service name
       icons:
-        - src: "/images/shortcuts/erp.png"
+        - src: "/images/shortcuts/gitlab.png"
+          sizes: "192x192"
+    - name: "GitHub"
+      short_name: "GitHub"
+      description: "External GitHub link"
+      url: "https://github.com"     # Direct external URL
+      icons:
+        - src: "/images/shortcuts/github.png"
           sizes: "192x192"
 ```
 
@@ -399,12 +414,19 @@ Homepage automatically validates all shortcut configurations:
 
 **Validated Elements:**
 - Required fields (`name` and either `url` or `target` must be present and non-empty)
-- Layout section existence (when using `target`, the section must exist in `layout:`)
-- Icon existence (shortcut icons are validated before inclusion)
+- Service existence (when using `target`, validated at runtime when shortcut is clicked)
+- Icon existence (shortcut icons are validated before inclusion in manifest)
+- URL security (only http:// and https:// protocols allowed for external URLs)
 - String types (all text fields must be valid strings)
 - Array structure (shortcuts and icons must be proper arrays)
 
 **Invalid shortcuts** are logged as warnings and excluded from the manifest. The manifest generation continues with valid shortcuts only.
+
+**Runtime Validation:**
+- When a shortcut with `target` is clicked, the API validates that the service exists
+- If the service is not found, a 404 error is returned
+- If the service has no URL, a 404 error is returned
+- This allows for dynamic service configurations without rebuilding the manifest
 
 ## Complete Example
 
@@ -445,28 +467,27 @@ pwa:
   
   # Shortcuts for quick access
   shortcuts:
-    - name: "CRM Applications"
+    - name: "Salesforce"
       short_name: "CRM"
-      description: "Quick access to CRM section"
-      target: "CRM"                          # Reference to layout section
-    - name: "ERP Systems"
+      description: "Quick access to Salesforce CRM"
+      target: "Salesforce"                   # Reference to service name
+    - name: "SAP"
       short_name: "ERP"
-      description: "Access ERP applications"
-      target: "ERP"                          # Reference to layout section
-    - name: "Settings"
-      url: "/settings"
+      description: "Access SAP ERP system"
+      target: "SAP"                          # Reference to service name
+    - name: "Company Website"
+      url: "https://example.com"             # Direct external URL
 
-# Layout Configuration (defines sections that can be referenced by shortcuts)
-layout:
-  CRM:
-    icon: mdi-handshake-#FF7A59
-    style: row
-    columns: 5
-  
-  ERP:
-    icon: mdi-domain-#F00AD0
-    style: row
-    columns: 5
+# Services Configuration (services.yaml) - defines services that can be referenced
+- CRM:
+    - Salesforce:
+        href: https://salesforce.example.com
+        description: Customer Relationship Management
+    
+- ERP:
+    - SAP:
+        href: https://sap.example.com
+        description: Enterprise Resource Planning
 
 # Standard Settings (used as fallbacks and for general theme)
 theme: dark
