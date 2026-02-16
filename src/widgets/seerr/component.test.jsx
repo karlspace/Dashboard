@@ -28,23 +28,41 @@ describe("widgets/seerr/component", () => {
     expect(container.querySelectorAll(".service-block")).toHaveLength(3);
     expect(screen.getByText("seerr.pending")).toBeInTheDocument();
     expect(screen.getByText("seerr.approved")).toBeInTheDocument();
-    expect(screen.getByText("seerr.available")).toBeInTheDocument();
+    expect(screen.getByText("seerr.completed")).toBeInTheDocument();
+    expect(screen.queryByText("seerr.available")).toBeNull();
     expect(screen.queryByText("seerr.issues")).toBeNull();
   });
 
   it("renders issues when enabled (and calls the issue/count endpoint)", () => {
     useWidgetAPI
-      .mockReturnValueOnce({ data: { pending: 1, approved: 2, available: 3 }, error: undefined })
+      .mockReturnValueOnce({ data: { pending: 1, approved: 2, available: 3, completed: 4 }, error: undefined })
       .mockReturnValueOnce({ data: { open: 1, total: 2 }, error: undefined });
 
     const service = {
-      widget: { type: "seerr", url: "http://x", fields: ["pending", "approved", "available", "issues"] },
+      widget: { type: "seerr", url: "http://x", fields: ["pending", "approved", "completed", "issues"] },
     };
     const { container } = renderWithProviders(<Component service={service} />, { settings: { hideErrors: false } });
 
     expect(useWidgetAPI.mock.calls[1][1]).toBe("issue/count");
     expect(container.querySelectorAll(".service-block")).toHaveLength(4);
     expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+  });
+
+  it("falls back from completed to available on older Seerr responses", () => {
+    useWidgetAPI
+      .mockReturnValueOnce({ data: { pending: 1, approved: 2, available: 3 }, error: undefined })
+      .mockReturnValueOnce({ data: undefined, error: undefined });
+
+    const service = {
+      widget: { type: "seerr", url: "http://x", fields: ["pending", "approved", "completed"] },
+    };
+
+    renderWithProviders(<Component service={service} />, { settings: { hideErrors: false } });
+
+    expect(service.widget.fields).toEqual(["pending", "approved", "available"]);
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.queryByText("seerr.completed")).toBeNull();
   });
 
   it("renders error UI when issues are enabled and issue/count errors", () => {
