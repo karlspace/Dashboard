@@ -35,7 +35,7 @@ export default function BookmarksGroup({
         layout?.header === false ? "px-1" : "p-1 pb-0",
       )}
     >
-      <Disclosure defaultOpen={!(layout?.initiallyCollapsed ?? groupsInitiallyCollapsed) ?? true}>
+      <Disclosure defaultOpen={!(layout?.initiallyCollapsed ?? groupsInitiallyCollapsed)}>
         {({ open }) => (
           <>
             {layout?.header !== false && (
