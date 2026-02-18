@@ -38,7 +38,7 @@ export default function ServicesGroup({
         isSubgroup ? "subgroup" : "",
       )}
     >
-      <Disclosure defaultOpen={!(layout?.initiallyCollapsed ?? groupsInitiallyCollapsed) ?? true}>
+      <Disclosure defaultOpen={!(layout?.initiallyCollapsed ?? groupsInitiallyCollapsed)}>
         {({ open }) => (
           <>
             {layout?.header !== false && (
