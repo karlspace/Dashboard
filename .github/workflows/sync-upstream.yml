@@ -12,7 +12,7 @@ on:
       target_branch:
         description: "Target branch to sync to"
         required: false
-        default: "workspace/2026-01-27"
+        default: "workspace/current"
 
 jobs:
   sync:  
