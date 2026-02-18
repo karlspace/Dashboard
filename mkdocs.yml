@@ -33,6 +33,7 @@ nav:
           - widgets/services/index.md
           - widgets/services/adguard-home.md
           - widgets/services/apcups.md
+          - widgets/services/arcane.md
           - widgets/services/argocd.md
           - widgets/services/atsumeru.md
           - widgets/services/audiobookshelf.md
@@ -90,7 +91,6 @@ nav:
           - widgets/services/jackett.md
           - widgets/services/jdownloader.md
           - widgets/services/jellyfin.md
-          - widgets/services/jellyseerr.md
           - widgets/services/jellystat.md
           - widgets/services/kavita.md
           - widgets/services/komga.md
@@ -124,7 +124,6 @@ nav:
           - widgets/services/openmediavault.md
           - widgets/services/opnsense.md
           - widgets/services/openwrt.md
-          - widgets/services/overseerr.md
           - widgets/services/pangolin.md
           - widgets/services/paperlessngx.md
           - widgets/services/peanut.md
@@ -150,6 +149,7 @@ nav:
           - widgets/services/rutorrent.md
           - widgets/services/sabnzbd.md
           - widgets/services/scrutiny.md
+          - widgets/services/seerr.md
           - widgets/services/slskd.md
           - widgets/services/sonarr.md
           - widgets/services/speedtest-tracker.md

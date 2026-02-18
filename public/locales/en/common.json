@@ -184,6 +184,13 @@
         "no_active": "No Active Streams",
         "plex_connection_error": "Check Plex Connection"
     },
+    "tracearr": {
+        "no_active": "No Active Streams",
+        "streams": "Streams",
+        "transcodes": "Transcodes",
+        "directplay": "Direct Play",
+        "bitrate": "Bitrate"
+    },
     "omada": {
         "connectedAp": "Connected APs",
         "activeUser": "Active devices",
@@ -282,17 +289,13 @@
         "approved": "Approved",
         "available": "Available"
     },
-    "jellyseerr": {
+    "seerr": {
         "pending": "Pending",
         "approved": "Approved",
         "available": "Available",
-        "issues": "Open Issues"
-    },
-    "overseerr": {
-        "pending": "Pending",
+        "completed": "Completed",
         "processing": "Processing",
-        "approved": "Approved",
-        "available": "Available"
+        "issues": "Open Issues"
     },
     "netalertx": {
         "total": "Total",
@@ -1150,6 +1153,13 @@
       "songs": "Songs",
       "time":  "Time",
       "artists": "Artists"
+    },
+    "arcane": {
+        "containers": "Containers",
+        "images": "Images",
+        "image_updates": "Image Updates",
+        "images_unused": "Unused",
+        "environment_required": "Environment ID Required"
     },
     "dockhand": {
         "running": "Running",
