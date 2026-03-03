@@ -152,6 +152,7 @@ nav:
           - widgets/services/seerr.md
           - widgets/services/slskd.md
           - widgets/services/sonarr.md
+          - widgets/services/sparkyfitness.md
           - widgets/services/speedtest-tracker.md
           - widgets/services/spoolman.md
           - widgets/services/stash.md
@@ -164,6 +165,7 @@ nav:
           - widgets/services/technitium.md
           - widgets/services/tdarr.md
           - widgets/services/traefik.md
+          - widgets/services/tracearr.md
           - widgets/services/transmission.md
           - widgets/services/trilium.md
           - widgets/services/truenas.md
