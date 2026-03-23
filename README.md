@@ -1,3 +1,91 @@
+# Homepage Fork
+
+> **This is a personal fork of [gethomepage/homepage](https://github.com/gethomepage/homepage).**
+>
+> This fork is **not affiliated** with the original project maintainers. For the official version, please visit the [upstream repository](https://github.com/gethomepage/homepage).
+
+## Fork Extensions
+
+This fork extends Homepage with additional, optional features.
+
+---
+
+### 🌍 World Clock Widget
+
+**Branch:** `feature/worldclock`
+
+Adds a lightweight information widget for displaying **multiple time zones** with customizable labels and optional country flags.
+Designed for global teams and distributed operations.
+
+![World Clock Example](docs/images/worldclock-example.png)
+
+#### Example Configuration
+
+```yaml
+- worldclock:
+    format: 24h
+    show_date: true
+    layout: grid
+    columns: 3
+    clocks:
+      - timezone: Europe/Berlin
+        label: DE
+        flag: de
+      - timezone: America/New_York
+        label: NYC
+        flag: us
+      - timezone: Asia/Tokyo
+        label: TYO
+        flag: jp
+```
+
+➡️ See **[World Clock Documentation](docs/widgets/info/worldclock.md)** for all supported options.
+
+---
+
+### Extended PWA Configuration
+
+**Branch:** `feature/pwa-configuration`
+
+Homepage supports installation as a **Progressive Web App (PWA)** on mobile devices, tablets, and desktops.
+This feature exposes the full **PWA manifest configuration**, allowing precise control over app name, appearance, icons, colors, and platform-specific behavior.
+
+#### Minimal Example
+
+```yaml
+pwa:
+  title: "Dashboard | BAUER GROUP"
+  shortName: "Dashboard"
+  description: "Dashboard of Company Services at BAUER GROUP"
+
+  display: standalone
+  startUrl: /
+  scope: /
+
+  themeColor: "#FF8500"
+  backgroundColor: "#18181B"
+
+  iconPath: /images/icons
+```
+
+The configuration is added to `settings.yaml` and is automatically converted into a valid PWA manifest.
+
+For the complete list of supported options (icons, categories, Apple settings, orientation, etc.), see:
+➡️ **[PWA Configuration](docs/configs/pwa.md)**
+
+---
+
+## Using This Fork
+
+```yaml
+services:
+  homepage:
+    image: ghcr.io/karlspace/dashboard:latest
+    # ... rest of your config
+```
+
+---
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/banner_light@2x.png">
@@ -11,27 +99,6 @@
 
 <p align="center">
   <img src="images/1.png?v=2" />
-</p>
-
-<p align="center">
-  <a href="https://github.com/gethomepage/homepage/actions/workflows/docker-publish.yml"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/gethomepage/homepage/docker-publish.yml"></a>
-  &nbsp;
-  <a href="https://codecov.io/gh/gethomepage/homepage"><img src="https://codecov.io/gh/gethomepage/homepage/graph/badge.svg?token=7SKFL4D9K7"/></a>
-  &nbsp;
-  <a href="https://crowdin.com/project/gethomepage" target="_blank"><img src="https://badges.crowdin.net/gethomepage/localized.svg"></a>
-  &nbsp;
-  <a href="https://discord.gg/k4ruYNrudu"><img alt="Discord" src="https://img.shields.io/discord/1019316731635834932"></a>
-  &nbsp;
-  <a href="https://gethomepage.dev/" title="Docs"><img title="Docs" src="https://github.com/gethomepage/homepage/actions/workflows/docs-publish.yml/badge.svg"/></a>
-  &nbsp;
-  <a href="https://paypal.me/phelpsben" title="Donate"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/benphelps"></a>
-</p>
-
-<p align="center">
-  <a href="https://www.digitalocean.com/?refcode=df14bcb7c016&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" alt="DigitalOcean Referral Badge" /></a>
-</p>
-<p align="center">
-<em>Homepage builds are kindly powered by DigitalOcean.</em>
 </p>
 
 # Features
@@ -156,16 +223,16 @@ This is a [Next.js](https://nextjs.org/) application, see their documentation fo
 
 The homepage documentation is available at [https://gethomepage.dev/](https://gethomepage.dev/).
 
-Homepage uses Zensical for documentation. To run the documentation locally, first install the dependencies:
+Homepage uses Material for MkDocs for documentation. To run the documentation locally, first install the dependencies:
 
 ```bash
-uv sync
+pip install -r requirements.txt
 ```
 
 Then run the development server:
 
 ```bash
-uv run zensical serve # or build, to build the static site
+mkdocs serve # or build, to build the static site
 ```
 
 # Support & Suggestions

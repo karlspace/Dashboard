@@ -52,3 +52,7 @@ site*/
 
 # venv
 .venv/
+
+# IDE
+.vscode/
+.claude/
