@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { appWithTranslation } from "next-i18next";
 import Head from "next/head";
+import { useEffect } from "react";
 import "styles/globals.css";
 import "styles/manrope.css";
 import "styles/theme.css";
@@ -11,6 +12,8 @@ import { TabProvider } from "utils/contexts/tab";
 import { ThemeProvider } from "utils/contexts/theme";
 
 import nextI18nextConfig from "../../next-i18next.config";
+
+import { initPWAExternalLinks } from "utils/pwa/external-links";
 
 // eslint-disable-next-line no-unused-vars
 const tailwindSafelist = [
@@ -68,6 +71,11 @@ const tailwindSafelist = [
 ];
 
 function MyApp({ Component, pageProps }) {
+  // Initialize PWA external links handler to fix Android PWA link behavior
+  useEffect(() => {
+    return initPWAExternalLinks();
+  }, []);
+
   return (
     <SWRConfig
       value={{

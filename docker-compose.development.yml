@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Dashboard - Development Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Local development with direct port exposure (no reverse proxy needed)
+# Usage:   docker compose -f docker-compose.development.yml up -d
+# Access:  http://localhost:${EXPOSED_APP_PORT}
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Homepage Dashboard Server
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Base Image: https://github.com/gethomepage/homepage
+  # Documentation: https://gethomepage.dev/
+  # ─────────────────────────────────────────────────────────────────────────────
+  dashboard-server:
+    build:
+      context: .
+    restart: unless-stopped
+    container_name: ${STACK_NAME:-dashboard}_SERVER
+    environment:
+      - TZ=${TIME_ZONE:-Etc/UTC}
+      - LOG_TARGETS=stdout
+      - PUID=1000
+      - PGID=1000
+      - HOMEPAGE_ALLOWED_HOSTS=localhost:${EXPOSED_APP_PORT:-8080},${SERVICE_HOSTNAME:-localhost}
+    ports:
+      - ${EXPOSED_APP_PORT:-8080}:3000/tcp
+    volumes:
+      - ./data/config:/app/config
+      #- ./data/media/images:/app/public/images
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"

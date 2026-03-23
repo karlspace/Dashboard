@@ -43,7 +43,8 @@ WORKDIR /app
 
 # Copy some files from context
 COPY --link --chown=1000:1000 /public ./public/
-COPY --link --chmod=755 docker-entrypoint.sh /usr/local/bin/
+COPY --link docker-entrypoint.sh /usr/local/bin/
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod 755 /usr/local/bin/docker-entrypoint.sh
 
 # Copy only necessary files from the build stage
 COPY --link --from=builder --chown=1000:1000 /app/.next/standalone/ ./
