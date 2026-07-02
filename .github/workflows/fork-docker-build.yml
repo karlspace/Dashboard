@@ -1,53 +1,33 @@
-name: Fork Docker Build
+# Fork Docker Build - uses the shared reusable workflow.
+# Builds this fork's single image and publishes it to GHCR on every
+# workspace push. Reference: bauer-group/automation-templates.
+
+name: 🐳 Fork Docker Build
 
 on:
   push:
     branches:
-      - workspace/**
-      # - feature/**
+      - "workspace/**"
     paths-ignore:
       - ".github/**"
-      - "**/*.md"      
+      - "**/*.md"
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+concurrency:
+  group: fork-docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
 
 jobs:
   build:
     name: Build & Push
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Log into registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value={{date 'YYYYMMDD-HHmmss'}}
-            type=raw,value=latest
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    uses: bauer-group/automation-templates/.github/workflows/fork-docker-build.yml@main
+    with:
+      # Single image published to ghcr.io/<owner>/dashboard (no name suffix).
+      images: |
+        [{"name": "dashboard", "dockerfile": "Dockerfile", "image": "${{ github.repository }}"}]
+    secrets: inherit
